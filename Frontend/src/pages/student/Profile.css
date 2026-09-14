@@ -1,0 +1,270 @@
+/* ================================
+   PROFILE PAGE
+================================ */
+
+.profile-page {
+  width: 100%;
+  min-height: 100%;
+  padding: 28px;
+  background: #f7f8fc;
+  color: #172033;
+}
+
+
+/* ================================
+   HEADER
+================================ */
+
+.profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+.profile-header h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.profile-header p {
+  margin: 7px 0 0;
+  color: #7a8497;
+  font-size: 14px;
+}
+
+
+/* ================================
+   MAIN PROFILE CARD
+================================ */
+
+.profile-card {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #e9ecf2;
+  border-radius: 16px;
+  box-shadow: 0 4px 18px rgba(20, 30, 50, 0.04);
+  overflow: hidden;
+}
+
+
+/* ================================
+   PROFILE TOP
+================================ */
+
+.profile-top {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 28px;
+  border-bottom: 1px solid #edf0f5;
+}
+
+.profile-avatar {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #eef3ff;
+  color: #4169e1;
+
+  font-size: 25px;
+  font-weight: 700;
+
+  border: 4px solid #f7f8fc;
+}
+
+.profile-name h2 {
+  margin: 0 0 5px;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.profile-name span {
+  display: inline-flex;
+  align-items: center;
+
+  padding: 5px 10px;
+  border-radius: 20px;
+
+  background: #eef3ff;
+  color: #4169e1;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+
+/* ================================
+   PROFILE SECTIONS
+================================ */
+
+.profile-section {
+  padding: 26px 28px;
+  border-bottom: 1px solid #edf0f5;
+}
+
+.profile-section:last-child {
+  border-bottom: none;
+}
+
+.profile-section h3 {
+  margin: 0 0 20px;
+
+  font-size: 17px;
+  font-weight: 700;
+  color: #172033;
+}
+
+
+/* ================================
+   PROFILE GRID
+================================ */
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 24px;
+}
+
+
+/* ================================
+   PROFILE FIELD
+================================ */
+
+.profile-field {
+  display: flex;
+  flex-direction: column;
+
+  min-height: 68px;
+  padding: 15px 16px;
+
+  background: #fafbfc;
+  border: 1px solid #edf0f5;
+  border-radius: 10px;
+  text-transform: uppercase;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.profile-field:hover {
+  border-color: #dfe5ef;
+  box-shadow: 0 3px 10px rgba(20, 30, 50, 0.03);
+}
+
+.profile-field span {
+  margin-bottom: 7px;
+
+  color: #8a93a5;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.profile-field strong {
+  color: #273248;
+  font-size: 14px;
+  font-weight: 600;
+
+  word-break: break-word;
+}
+
+
+/* ================================
+   LOADING / ERROR
+================================ */
+
+.profile-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 300px;
+
+  color: #7a8497;
+  font-size: 15px;
+}
+
+.profile-error {
+  padding: 15px 18px;
+
+  border-radius: 10px;
+
+  background: #fff1f2;
+  border: 1px solid #ffe0e4;
+
+  color: #be123c;
+
+  font-size: 14px;
+}
+
+
+/* ================================
+   TABLET
+================================ */
+
+@media (max-width: 900px) {
+  .profile-page {
+    padding: 22px;
+  }
+
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ================================
+   MOBILE
+================================ */
+
+@media (max-width: 600px) {
+  .profile-page {
+    padding: 16px;
+  }
+
+  .profile-header {
+    margin-bottom: 20px;
+  }
+
+  .profile-header h1 {
+    font-size: 24px;
+  }
+
+  .profile-header p {
+    font-size: 13px;
+  }
+
+  .profile-top {
+    padding: 20px;
+  }
+
+  .profile-avatar {
+    width: 62px;
+    height: 62px;
+    font-size: 21px;
+  }
+
+  .profile-name h2 {
+    font-size: 18px;
+  }
+
+  .profile-section {
+    padding: 20px;
+  }
+
+  .profile-grid {
+    gap: 12px;
+  }
+
+  .profile-field {
+    padding: 13px 14px;
+  }
+}

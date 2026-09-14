@@ -1,0 +1,369 @@
+/* =========================================
+   STUDENT SIDEBAR
+========================================= */
+
+.sidebar {
+  width: 335px;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  background: #ffffff;
+  border-right: 1px solid #e8e9ef;
+  box-shadow: 4px 0 24px rgba(20, 20, 50, 0.05);
+  overflow: hidden;
+  z-index: 100;
+  transition: width 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* =========================================
+   LOGO / BRAND
+========================================= */
+
+.sidebar-logo {
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  box-sizing: border-box;
+  border-bottom: 1px solid #eeeeee;
+  flex-shrink: 0;
+}
+
+.logo-icon {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.sidebar-logo-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  border-radius: 10px;
+  transition: transform 0.3s ease;
+}
+
+.sidebar-logo-image:hover {
+  transform: scale(1.06) rotate(-3deg);
+}
+
+.sidebar-brand {
+  min-width: 0;
+}
+
+.sidebar-brand h2 {
+  margin: 0;
+  font-size: 19px;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: #20212b;
+  letter-spacing: -0.2px;
+}
+
+.sidebar-brand span {
+  display: block;
+  margin-top: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #858899;
+  letter-spacing: 0.4px;
+}
+
+/* =========================================
+   SIDEBAR SECTIONS
+========================================= */
+
+.sidebar-section {
+  flex: 1;
+  min-height: 0;
+  padding: 20px 10px 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sidebar-title {
+  margin: 0 12px 12px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+  color: #858899;
+}
+
+/* =========================================
+   NAVIGATION
+========================================= */
+
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-item {
+  position: relative;
+  width: 100%;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  margin-bottom: 4px;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #555968;
+  text-decoration: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    background 0.25s ease,
+    color 0.25s ease,
+    transform 0.2s ease,
+    box-shadow 0.25s ease;
+}
+
+/* subtle shine layer */
+.nav-item::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 70%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.16),
+    transparent
+  );
+  transform: skewX(-20deg);
+  transition: left 0.55s ease;
+  pointer-events: none;
+}
+
+.nav-item:hover::after {
+  left: 130%;
+}
+
+.nav-item:hover {
+  background: #f4f3ff;
+  color: #4025d8;
+  transform: translateX(4px);
+}
+
+.nav-item.active {
+  background: #5145e5;
+  color: #ffffff;
+  box-shadow: 0 5px 14px rgba(81, 69, 229, 0.20);
+  transform: translateX(0);
+}
+
+/* active left indicator */
+.nav-item.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 4px;
+  background: #ffffff;
+  border-radius: 0 5px 5px 0;
+}
+
+/* =========================================
+   ICONS
+========================================= */
+
+.nav-item .material-symbols-outlined {
+  position: relative;
+  z-index: 1;
+  font-size: 19px;
+  flex-shrink: 0;
+  transition:
+    transform 0.25s ease,
+    font-variation-settings 0.25s ease;
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 600,
+    "GRAD" 0,
+    "opsz" 24;
+}
+
+.nav-item:hover .material-symbols-outlined {
+  transform: scale(1.13);
+}
+
+.nav-item.active .material-symbols-outlined {
+  font-variation-settings:
+    "FILL" 1,
+    "wght" 600,
+    "GRAD" 0,
+    "opsz" 24;
+}
+
+/* keep text above shine */
+.nav-item > span:not(.material-symbols-outlined) {
+  position: relative;
+  z-index: 1;
+}
+
+/* =========================================
+   AI BADGE
+========================================= */
+
+.nav-badge {
+  margin-left: auto;
+  padding: 3px 7px;
+  border-radius: 20px;
+  background: #e8d9ff;
+  color: #6829dc;
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.nav-item:hover .nav-badge {
+  transform: scale(1.08);
+  box-shadow: 0 2px 8px rgba(104, 41, 220, 0.18);
+}
+
+.nav-item.active .nav-badge {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+/* =========================================
+   SYSTEM SECTION
+========================================= */
+
+.system-section {
+  flex-shrink: 0;
+  margin-top: 10px;
+  padding: 15px 10px 15px;
+  border-top: 1px solid #eeeeee;
+  background: #ffffff;
+}
+
+/* =========================================
+   LOGOUT
+========================================= */
+
+.nav-item.logout {
+  color: #c91515;
+}
+
+.nav-item.logout:hover {
+  background: #fff1f1;
+  color: #c91515;
+  transform: translateX(4px);
+}
+
+.nav-item.logout .material-symbols-outlined {
+  color: inherit;
+}
+
+/* =========================================
+   SCROLLBAR
+========================================= */
+
+.sidebar-section {
+  scrollbar-width: thin;
+  scrollbar-color: #d8d9df transparent;
+}
+
+.sidebar-section::-webkit-scrollbar {
+  width: 5px;
+}
+
+.sidebar-section::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-section::-webkit-scrollbar-thumb {
+  background: #d8d9df;
+  border-radius: 10px;
+}
+
+.sidebar-section::-webkit-scrollbar-thumb:hover {
+  background: #bfc0c9;
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 1100px) {
+  .sidebar {
+    width: 250px;
+  }
+
+  .sidebar-brand h2 {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 800px) {
+  .sidebar {
+    width: 75px;
+  }
+
+  .sidebar-logo {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .sidebar-brand,
+  .sidebar-title,
+  .nav-item > span:not(.material-symbols-outlined),
+  .nav-badge {
+    display: none;
+  }
+
+  .nav-item {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .nav-item:hover {
+    transform: none;
+  }
+
+  .system-section {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}
+
+/* =========================================
+   ACCESSIBILITY
+========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .nav-item,
+  .nav-item::after,
+  .nav-item .material-symbols-outlined,
+  .sidebar-logo-image,
+  .nav-badge {
+    transition: none;
+  }
+}

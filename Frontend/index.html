@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+
+  <!-- Animated Favicon -->
+  <link
+    id="favicon"
+    rel="icon"
+    type="image/png"
+    href="/FullLogo.jpg"
+  />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>Student Performance AI</title>
+
+  <!-- Google Fonts -->
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+  />
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  />
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    rel="stylesheet"
+  />
+</head>
+
+
+<body>
+
+  <div id="root"></div>
+
+  <script type="module" src="/src/main.jsx"></script>
+
+
+  <!-- ==============================
+       ANIMATED FAVICON
+  =============================== -->
+
+  <script>
+
+    const canvas = document.createElement("canvas");
+
+    canvas.width = 64;
+    canvas.height = 64;
+
+    const ctx = canvas.getContext("2d");
+
+    const favicon = document.getElementById("favicon");
+
+
+    /* ==============================
+       LOAD IMAGES
+    =============================== */
+
+    const logo = new Image();
+    const ai = new Image();
+
+    logo.src = "/FullLogo.jpg";
+    ai.src = "/ai-icons.png";
+
+
+    let loadedImages = 0;
+
+
+    function imageLoaded() {
+
+      loadedImages++;
+
+      if (loadedImages === 2) {
+
+        requestAnimationFrame(
+          animateFavicon
+        );
+
+      }
+
+    }
+
+
+    logo.onload = imageLoaded;
+    ai.onload = imageLoaded;
+
+
+    logo.onerror = () => {
+
+      console.error(
+        "❌ FullLogo.jpg not found in public folder"
+      );
+
+    };
+
+
+    ai.onerror = () => {
+
+      console.error(
+        "❌ ai-icon.png not found in public folder"
+      );
+
+    };
+
+
+    /* ==============================
+       FAVICON ANIMATION
+    =============================== */
+
+    function animateFavicon(time) {
+
+
+      /* ==========================
+         LOGO ↔ AI SWITCH
+      ========================== */
+
+      const switchTime = 1800;
+
+      const imageNumber =
+        Math.floor(time / switchTime) % 2;
+
+      const currentImage =
+        imageNumber === 0
+          ? logo
+          : ai;
+
+
+      /* ==========================
+         CLEAR
+      ========================== */
+
+      ctx.clearRect(
+        0,
+        0,
+        64,
+        64
+      );
+
+
+      /* ==========================
+         SQUARE BACKGROUND
+      ========================== */
+
+      ctx.fillStyle = "#080b18";
+
+      ctx.beginPath();
+
+      ctx.roundRect(
+        1,
+        1,
+        62,
+        62,
+        11
+      );
+
+      ctx.fill();
+
+
+      /* ==========================
+         BLUE → PURPLE BORDER
+      ========================== */
+
+      const gradient =
+        ctx.createLinearGradient(
+          2,
+          2,
+          62,
+          62
+        );
+
+
+      gradient.addColorStop(
+        0,
+        "#00d9ff"
+      );
+
+      gradient.addColorStop(
+        0.5,
+        "#6366f1"
+      );
+
+      gradient.addColorStop(
+        1,
+        "#c026ff"
+      );
+
+
+      ctx.save();
+
+      ctx.shadowBlur = 7;
+
+      ctx.shadowColor =
+        "#6366f1";
+
+      ctx.strokeStyle =
+        gradient;
+
+      ctx.lineWidth = 3;
+
+
+      ctx.beginPath();
+
+      ctx.roundRect(
+        4,
+        4,
+        56,
+        56,
+        10
+      );
+
+      ctx.stroke();
+
+      ctx.restore();
+
+
+      /* ==========================
+         IMAGE
+      ========================== */
+
+      ctx.save();
+
+      ctx.beginPath();
+
+      ctx.roundRect(
+        9,
+        9,
+        46,
+        46,
+        7
+      );
+
+      ctx.clip();
+
+
+      ctx.drawImage(
+        currentImage,
+        9,
+        9,
+        46,
+        46
+      );
+
+
+      ctx.restore();
+
+
+      /* ==========================
+         YELLOW STATUS DOT
+         BOTTOM RIGHT
+      ========================== */
+
+      const pulse =
+        (Math.sin(time / 150) + 1) / 2;
+
+
+      const radius =
+        3.8 + pulse * 10;
+
+
+      const alpha =
+        0.45 + pulse * 0.55;
+
+
+      ctx.save();
+
+      ctx.globalAlpha =
+        alpha;
+
+
+      ctx.shadowBlur =
+        8 + pulse * 12;
+
+      ctx.shadowColor =
+        "#facc15";
+
+
+      ctx.fillStyle =
+        "#facc15";
+
+
+      ctx.beginPath();
+
+      ctx.arc(
+        50,
+        47,
+        radius,
+        0,
+        Math.PI * 2
+      );
+
+      ctx.fill();
+
+
+      ctx.restore();
+
+
+      /* ==========================
+         DOT HIGHLIGHT
+      ========================== */
+
+      ctx.save();
+
+      ctx.fillStyle =
+        "#fffbd1";
+
+
+      ctx.beginPath();
+
+      ctx.arc(
+        52.2,
+        52.2,
+        1,
+        0,
+        Math.PI * 2
+      );
+
+      ctx.fill();
+
+
+      ctx.restore();
+
+
+      /* ==========================
+         UPDATE FAVICON
+      ========================== */
+
+      favicon.href =
+        canvas.toDataURL(
+          "image/png"
+        );
+
+
+      requestAnimationFrame(
+        animateFavicon
+      );
+
+    }
+
+  </script>
+
+</body>
+
+</html>

@@ -1,0 +1,478 @@
+.teacher-attendance-page {
+    min-height: 100vh;
+    padding: 30px;
+    background: #f6f8fb;
+}
+
+/* Header */
+
+.attendance-header {
+    margin-bottom: 25px;
+}
+
+.attendance-header h2 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.attendance-header p {
+    margin: 7px 0 0;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+
+/* Selection */
+
+.attendance-selection-card {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+
+    background: white;
+    padding: 24px;
+    border-radius: 14px;
+    margin-bottom: 25px;
+
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.selection-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.selection-item label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.selection-item select,
+.selection-item input {
+    height: 45px;
+    padding: 0 12px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+
+    font-size: 14px;
+    color: #374151;
+
+    background: white;
+    outline: none;
+
+    transition: 0.2s;
+}
+
+.selection-item select:focus,
+.selection-item input:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+
+/* Students Card */
+
+.students-card {
+    background: white;
+    border-radius: 14px;
+
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+
+    overflow: hidden;
+}
+
+.students-card-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #e5e7eb;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.students-card-header h4 {
+    margin: 0;
+
+    font-size: 19px;
+    font-weight: 700;
+
+    color: #1f2937;
+}
+
+.students-card-header span {
+    display: block;
+
+    margin-top: 4px;
+
+    font-size: 13px;
+    color: #6b7280;
+}
+
+
+/* Table */
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+.attendance-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.attendance-table thead {
+    background: #f9fafb;
+}
+
+.attendance-table th {
+    padding: 15px 20px;
+
+    text-align: left;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    color: #6b7280;
+
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.attendance-table td {
+    padding: 15px 20px;
+
+    border-bottom: 1px solid #f0f0f0;
+
+    font-size: 14px;
+    color: #374151;
+}
+
+.attendance-table tbody tr:hover {
+    background: #fafafa;
+}
+
+.student-number {
+    width: 60px;
+    color: #9ca3af !important;
+}
+
+
+/* Student */
+
+.student-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.student-info strong {
+    color: #1f2937;
+    font-weight: 600;
+}
+
+.student-avatar {
+    width: 38px;
+    height: 38px;
+
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #eef2ff;
+    color: #4f46e5;
+
+    font-weight: 700;
+}
+
+.username {
+    color: #6b7280 !important;
+}
+
+
+/* Attendance Status */
+
+.status-select {
+    min-width: 120px;
+    height: 38px;
+
+    padding: 0 10px;
+
+    border-radius: 7px;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    outline: none;
+}
+
+.status-select.Present {
+    border: 1px solid #86efac;
+    background: #f0fdf4;
+    color: #15803d;
+}
+
+.status-select.Absent {
+    border: 1px solid #fca5a5;
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.status-select.Late {
+    border: 1px solid #fde68a;
+    background: #fffbeb;
+    color: #d97706;
+}
+
+
+/* Footer */
+
+.attendance-footer {
+    padding: 18px 24px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    border-top: 1px solid #e5e7eb;
+}
+
+.attendance-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.info-dot {
+    width: 8px;
+    height: 8px;
+
+    border-radius: 50%;
+
+    background: #4f46e5;
+}
+
+
+/* Save Button */
+
+.save-attendance-btn {
+    border: none;
+
+    padding: 11px 22px;
+
+    border-radius: 8px;
+
+    background: #4f46e5;
+    color: white;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+.save-attendance-btn:hover {
+    background: #4338ca;
+    transform: translateY(-1px);
+}
+
+.save-attendance-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+
+/* Message */
+
+.attendance-message {
+    margin: 0 24px 20px;
+
+    padding: 12px 15px;
+
+    border-radius: 8px;
+
+    background: #eff6ff;
+    color: #1d4ed8;
+
+    font-size: 14px;
+}
+
+
+/* Empty */
+
+.no-students {
+    text-align: center;
+
+    padding: 60px 20px;
+
+    color: #6b7280;
+}
+
+.empty-icon {
+    font-size: 40px;
+    margin-bottom: 10px;
+}
+
+.no-students h5 {
+    margin: 0 0 5px;
+
+    color: #374151;
+    font-size: 17px;
+}
+
+.no-students p {
+    margin: 0;
+    font-size: 14px;
+}
+
+
+/* Responsive */
+
+@media (max-width: 900px) {
+    .attendance-selection-card {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .teacher-attendance-page {
+        padding: 15px;
+    }
+
+    .attendance-header h2 {
+        font-size: 23px;
+    }
+
+    .attendance-selection-card {
+        padding: 18px;
+    }
+
+    .attendance-footer {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+    }
+
+    .save-attendance-btn {
+        width: 100%;
+    }
+}
+
+.attendance-input {
+    width: 100px;
+    height: 38px;
+
+    padding: 0 10px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 7px;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    color: #374151;
+
+    background: white;
+
+    outline: none;
+
+    transition: 0.2s;
+}
+
+.attendance-input:focus {
+    border-color: #4f46e5;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(79, 70, 229, 0.1);
+}
+
+
+/* Present */
+
+.present-input {
+    border-color: #86efac;
+    background: #f0fdf4;
+    color: #15803d;
+}
+
+
+/* Absent */
+
+.absent-input {
+    border-color: #fca5a5;
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+
+/* Late */
+
+.late-input {
+    border-color: #fde68a;
+    background: #fffbeb;
+    color: #d97706;
+}
+
+
+/* Remove number input arrows */
+
+.attendance-input::-webkit-inner-spin-button,
+.attendance-input::-webkit-outer-spin-button {
+    opacity: 1;
+}
+
+
+/* Four-column selection */
+
+.attendance-selection-card {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+
+/* Responsive */
+
+@media (max-width: 1100px) {
+
+    .attendance-selection-card {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .attendance-input {
+        width: 80px;
+    }
+}
+
+
+@media (max-width: 900px) {
+
+    .attendance-selection-card {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+@media (max-width: 600px) {
+
+    .attendance-input {
+        width: 70px;
+    }
+
+    .attendance-table th,
+    .attendance-table td {
+        padding: 12px 10px;
+    }
+}

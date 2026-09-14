@@ -1,0 +1,593 @@
+/* =====================================================
+   AI PREDICTION PAGE
+===================================================== */
+
+.ai-prediction-page {
+  min-height: 100vh;
+  padding: 35px 45px;
+  background: #f7f8fc;
+  box-sizing: border-box;
+}
+
+
+/* =====================================================
+   PAGE HEADER
+===================================================== */
+
+.prediction-header {
+  margin-bottom: 35px;
+}
+
+.prediction-header h1 {
+  margin: 0 0 10px;
+  font-size: 38px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.prediction-header p {
+  margin: 0;
+  font-size: 16px;
+  color: #6b7280;
+}
+
+
+/* =====================================================
+   FORM
+===================================================== */
+
+.prediction-form {
+  width: 100%;
+}
+
+
+/* =====================================================
+   SECTIONS
+===================================================== */
+
+.prediction-section {
+  background: #ffffff;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+
+  padding: 28px;
+
+  margin-bottom: 25px;
+
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+}
+
+.prediction-section h2 {
+  margin: 0 0 25px;
+
+  font-size: 22px;
+  font-weight: 650;
+
+  color: #1f2937;
+}
+
+
+/* =====================================================
+   FORM GRID
+===================================================== */
+
+.form-grid {
+  display: grid;
+
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  gap: 22px;
+}
+
+
+/* =====================================================
+   FORM FIELD
+===================================================== */
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+}
+
+.form-field label {
+  font-size: 14px;
+  font-weight: 600;
+
+  color: #374151;
+}
+
+
+/* =====================================================
+   INPUT + SELECT
+===================================================== */
+
+.form-field input,
+.form-field select {
+  width: 100%;
+
+  height: 45px;
+
+  padding: 0 13px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #d1d5db;
+
+  border-radius: 9px;
+
+  background: #ffffff;
+
+  color: #111827;
+
+  font-size: 15px;
+
+  outline: none;
+
+  transition: 0.2s;
+}
+
+.form-field input:focus,
+.form-field select:focus {
+  border-color: #4f46e5;
+
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+}
+
+
+/* =====================================================
+   SUBMIT BUTTON
+===================================================== */
+
+.prediction-actions {
+  display: flex;
+
+  justify-content: flex-end;
+
+  margin-top: 10px;
+}
+
+.prediction-actions button {
+  min-width: 220px;
+
+  padding: 13px 24px;
+
+  border: none;
+
+  border-radius: 10px;
+
+  background: #4f46e5;
+
+  color: #ffffff;
+
+  font-size: 15px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.prediction-actions button:hover {
+  background: #4338ca;
+
+  transform: translateY(-1px);
+}
+
+.prediction-actions button:disabled {
+  opacity: 0.6;
+
+  cursor: not-allowed;
+
+  transform: none;
+}
+
+
+/* =====================================================
+   ERROR
+===================================================== */
+
+.prediction-error {
+  margin-top: 20px;
+
+  padding: 13px 16px;
+
+  border-radius: 9px;
+
+  background: #fef2f2;
+
+  border: 1px solid #fecaca;
+
+  color: #dc2626;
+
+  font-size: 14px;
+}
+
+
+/* =====================================================
+   PREDICTION MODAL OVERLAY
+===================================================== */
+
+.prediction-modal-overlay {
+  position: fixed;
+
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  background: rgba(15, 23, 42, 0.55);
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  box-sizing: border-box;
+
+  z-index: 9999;
+}
+
+
+/* =====================================================
+   MODAL
+===================================================== */
+
+.prediction-modal {
+  position: relative;
+
+  width: 440px;
+
+  max-width: 100%;
+
+  background: #ffffff;
+
+  border-radius: 20px;
+
+  padding: 35px;
+
+  box-sizing: border-box;
+
+  text-align: center;
+
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.25);
+
+  animation: predictionModalShow 0.3s ease;
+}
+
+
+/* =====================================================
+   MODAL ANIMATION
+===================================================== */
+
+@keyframes predictionModalShow {
+  from {
+    opacity: 0;
+
+    transform: translateY(-25px) scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+
+    transform: translateY(0) scale(1);
+  }
+}
+
+
+/* =====================================================
+   CLOSE BUTTON
+===================================================== */
+
+.prediction-modal-close {
+  position: absolute;
+
+  top: 12px;
+  right: 15px;
+
+  width: 36px;
+  height: 36px;
+
+  border: none;
+
+  background: transparent;
+
+  color: #6b7280;
+
+  font-size: 28px;
+
+  line-height: 1;
+
+  cursor: pointer;
+
+  border-radius: 50%;
+
+  transition: 0.2s;
+}
+
+.prediction-modal-close:hover {
+  background: #f3f4f6;
+
+  color: #111827;
+}
+
+
+/* =====================================================
+   MODAL ICON
+===================================================== */
+
+.prediction-modal-icon {
+  width: 72px;
+  height: 72px;
+
+  margin: 0 auto 18px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #eef2ff;
+
+  font-size: 34px;
+}
+
+
+/* =====================================================
+   MODAL HEADING
+===================================================== */
+
+.prediction-modal h2 {
+  margin: 0;
+
+  font-size: 26px;
+
+  font-weight: 700;
+
+  color: #1f2937;
+}
+
+
+/* =====================================================
+   MODAL SUBTITLE
+===================================================== */
+
+.prediction-modal-subtitle {
+  margin: 9px 0 0;
+
+  color: #6b7280;
+
+  font-size: 14px;
+
+  line-height: 1.5;
+}
+
+
+/* =====================================================
+   SCORE
+===================================================== */
+
+.prediction-score {
+  margin-top: 25px;
+
+  padding: 20px;
+
+  border-radius: 14px;
+
+  background: #f8fafc;
+
+  border: 1px solid #e5e7eb;
+}
+
+.prediction-score span {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #6b7280;
+
+  font-size: 14px;
+
+  font-weight: 500;
+}
+
+.prediction-score strong {
+  font-size: 46px;
+
+  font-weight: 750;
+
+  color: #111827;
+}
+
+.prediction-score small {
+  margin-left: 5px;
+
+  font-size: 18px;
+
+  color: #6b7280;
+}
+
+
+/* =====================================================
+   PERFORMANCE CATEGORY
+===================================================== */
+
+.prediction-category {
+  margin-top: 18px;
+
+  padding: 16px;
+
+  border-radius: 13px;
+
+  background: #f8fafc;
+
+  border: 1px solid #e5e7eb;
+}
+
+.prediction-category span {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: #6b7280;
+
+  font-size: 13px;
+}
+
+.prediction-category strong {
+  font-size: 20px;
+
+  font-weight: 700;
+
+  color: #111827;
+}
+
+
+/* =====================================================
+   CATEGORY COLORS
+===================================================== */
+
+.prediction-category-excellent {
+  background: #ecfdf5;
+
+  border-color: #a7f3d0;
+}
+
+.prediction-category-excellent strong {
+  color: #059669;
+}
+
+
+.prediction-category-good {
+  background: #eff6ff;
+
+  border-color: #bfdbfe;
+}
+
+.prediction-category-good strong {
+  color: #2563eb;
+}
+
+
+.prediction-category-average {
+  background: #fffbeb;
+
+  border-color: #fde68a;
+}
+
+.prediction-category-average strong {
+  color: #d97706;
+}
+
+
+.prediction-category-needs {
+  background: #fef2f2;
+
+  border-color: #fecaca;
+}
+
+.prediction-category-needs strong {
+  color: #dc2626;
+}
+
+
+/* =====================================================
+   DONE BUTTON
+===================================================== */
+
+.prediction-modal-button {
+  width: 100%;
+
+  margin-top: 25px;
+
+  padding: 13px 20px;
+
+  border: none;
+
+  border-radius: 10px;
+
+  background: #4f46e5;
+
+  color: #ffffff;
+
+  font-size: 15px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.prediction-modal-button:hover {
+  background: #4338ca;
+
+  transform: translateY(-1px);
+}
+
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (max-width: 768px) {
+
+  .ai-prediction-page {
+    padding: 25px 20px;
+  }
+
+  .prediction-header h1 {
+    font-size: 30px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .prediction-section {
+    padding: 22px;
+  }
+
+  .prediction-actions {
+    justify-content: stretch;
+  }
+
+  .prediction-actions button {
+    width: 100%;
+  }
+}
+
+
+@media (max-width: 500px) {
+
+  .ai-prediction-page {
+    padding: 20px 15px;
+  }
+
+  .prediction-header h1 {
+    font-size: 26px;
+  }
+
+  .prediction-section h2 {
+    font-size: 20px;
+  }
+
+  .prediction-modal {
+    padding: 28px 20px;
+  }
+
+  .prediction-modal h2 {
+    font-size: 22px;
+  }
+
+  .prediction-score strong {
+    font-size: 40px;
+  }
+}

@@ -1,0 +1,228 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap");
+@layer bootstrap, theme, base, components, utilities;
+
+@import "bootstrap/dist/css/bootstrap.min.css" layer(bootstrap);
+@import "tailwindcss";
+/* =========================================================
+   STITCH DESIGN TOKENS
+   ========================================================= */
+
+@theme {
+
+  /* ---------------------------------------------------------
+     COLORS
+     --------------------------------------------------------- */
+
+  --color-on-background: #131b2e;
+  --color-outline: #737686;
+  --color-on-secondary: #ffffff;
+  --color-inverse-surface: #283044;
+  --color-on-surface-variant: #434655;
+
+  --color-on-primary-fixed-variant: #003ea8;
+  --color-secondary-fixed: #eaddff;
+  --color-inverse-on-surface: #eef0ff;
+  --color-on-secondary-fixed: #25005a;
+  --color-on-error-container: #93000a;
+
+  --color-surface-tint: #0053db;
+  --color-on-tertiary-fixed: #00201d;
+  --color-on-error: #ffffff;
+  --color-on-tertiary: #ffffff;
+
+  --color-tertiary-container: #007b71;
+  --color-secondary-container: #8a4cfc;
+  --color-tertiary: #006058;
+
+  --color-surface-dim: #d2d9f4;
+  --color-surface-variant: #dae2fd;
+  --color-on-primary-container: #eeefff;
+  --color-outline-variant: #c3c6d7;
+
+  --color-secondary-fixed-dim: #d2bbff;
+  --color-on-tertiary-fixed-variant: #005049;
+  --color-inverse-primary: #b4c5ff;
+
+  --color-error-container: #ffdad6;
+  --color-on-surface: #131b2e;
+
+  --color-surface-container-lowest: #ffffff;
+  --color-primary: #004ac6;
+  --color-surface-bright: #faf8ff;
+
+  --color-tertiary-fixed: #89f5e7;
+  --color-on-primary-fixed: #00174b;
+
+  --color-surface-container: #eaedff;
+  --color-error: #ba1a1a;
+
+  --color-primary-container: #2563eb;
+  --color-on-secondary-fixed-variant: #5a00c6;
+
+  --color-background: #faf8ff;
+
+  --color-surface-container-highest: #dae2fd;
+  --color-surface-container-low: #f2f3ff;
+  --color-surface-container-high: #e2e7ff;
+
+  --color-primary-fixed-dim: #b4c5ff;
+  --color-on-tertiary-container: #b3fff3;
+  --color-on-secondary-container: #fffbff;
+
+  --color-tertiary-fixed-dim: #6bd8cb;
+  --color-on-primary: #ffffff;
+  --color-surface: #faf8ff;
+
+  --color-primary-fixed: #dbe1ff;
+  --color-secondary: #712ae2;
+
+
+  /* ---------------------------------------------------------
+     BORDER RADIUS
+     --------------------------------------------------------- */
+
+  --radius-default: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-full: 9999px;
+
+
+  /* ---------------------------------------------------------
+     CUSTOM SPACING
+     --------------------------------------------------------- */
+
+  --spacing-space-2xs: 0.25rem;
+  --spacing-space-xs: 0.5rem;
+  --spacing-space-sm: 0.75rem;
+  --spacing-space-md: 1rem;
+  --spacing-space-lg: 1.5rem;
+  --spacing-space-xl: 2rem;
+  --spacing-space-2xl: 3rem;
+
+  --spacing-gutter-mobile: 1rem;
+  --spacing-gutter-desktop: 1.5rem;
+
+  --spacing-sidebar-collapsed: 4.5rem;
+  --spacing-sidebar-width: 16rem;
+
+
+  /* ---------------------------------------------------------
+     CONTAINER
+     --------------------------------------------------------- */
+
+  --container-container-max: 88rem;
+
+
+  /* ---------------------------------------------------------
+     FONT FAMILIES
+     --------------------------------------------------------- */
+
+  --font-label-sm: "Inter";
+  --font-label-md: "Inter";
+
+  --font-body-sm: "Inter";
+  --font-body-md: "Inter";
+  --font-body-lg: "Inter";
+
+  --font-headline-sm: "Plus Jakarta Sans";
+  --font-headline-md: "Plus Jakarta Sans";
+  --font-headline-lg: "Plus Jakarta Sans";
+  --font-headline-lg-mobile: "Plus Jakarta Sans";
+
+  --font-title-md: "Plus Jakarta Sans";
+
+  --font-display-lg: "Plus Jakarta Sans";
+  --font-display-lg-mobile: "Plus Jakarta Sans";
+
+  --font-metric-val: "Plus Jakarta Sans";
+
+
+  /* ---------------------------------------------------------
+     FONT SIZES
+     --------------------------------------------------------- */
+
+  --text-label-sm: 11px;
+  --text-label-sm--line-height: 16px;
+  --text-label-sm--letter-spacing: 0.03em;
+  --text-label-sm--font-weight: 600;
+
+  --text-label-md: 13px;
+  --text-label-md--line-height: 18px;
+  --text-label-md--letter-spacing: 0.01em;
+  --text-label-md--font-weight: 500;
+
+  --text-body-sm: 12px;
+  --text-body-sm--line-height: 18px;
+  --text-body-sm--letter-spacing: 0.005em;
+  --text-body-sm--font-weight: 400;
+
+  --text-body-md: 14px;
+  --text-body-md--line-height: 22px;
+  --text-body-md--letter-spacing: 0em;
+  --text-body-md--font-weight: 400;
+
+  --text-body-lg: 16px;
+  --text-body-lg--line-height: 26px;
+  --text-body-lg--letter-spacing: 0em;
+  --text-body-lg--font-weight: 400;
+
+  --text-title-md: 16px;
+  --text-title-md--line-height: 24px;
+  --text-title-md--letter-spacing: -0.005em;
+  --text-title-md--font-weight: 600;
+
+  --text-headline-sm: 20px;
+  --text-headline-sm--line-height: 28px;
+  --text-headline-sm--letter-spacing: -0.01em;
+  --text-headline-sm--font-weight: 600;
+
+  --text-headline-md: 24px;
+  --text-headline-md--line-height: 32px;
+  --text-headline-md--letter-spacing: -0.015em;
+  --text-headline-md--font-weight: 600;
+
+  --text-headline-lg: 32px;
+  --text-headline-lg--line-height: 40px;
+  --text-headline-lg--letter-spacing: -0.02em;
+  --text-headline-lg--font-weight: 700;
+
+  --text-headline-lg-mobile: 24px;
+  --text-headline-lg-mobile--line-height: 32px;
+  --text-headline-lg-mobile--letter-spacing: -0.015em;
+  --text-headline-lg-mobile--font-weight: 700;
+
+  --text-display-lg: 48px;
+  --text-display-lg--line-height: 56px;
+  --text-display-lg--letter-spacing: -0.025em;
+  --text-display-lg--font-weight: 800;
+
+  --text-display-lg-mobile: 32px;
+  --text-display-lg-mobile--line-height: 40px;
+  --text-display-lg-mobile--letter-spacing: -0.02em;
+  --text-display-lg-mobile--font-weight: 800;
+
+  --text-metric-val: 30px;
+  --text-metric-val--line-height: 36px;
+  --text-metric-val--letter-spacing: -0.02em;
+  --text-metric-val--font-weight: 700;
+}
+
+
+/* =========================================================
+   GLOBAL STYLES
+   ========================================================= */
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: #faf8ff;
+  color: #131b2e;
+  font-family: "Inter", sans-serif;
+}
+
+section {
+  scroll-margin-top: 90px;
+}
