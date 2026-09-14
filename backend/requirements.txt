@@ -11,3 +11,4 @@ scikit-learn==1.9.0
 joblib==1.6.0
 openpyxl==3.1.5
 gunicorn
+requests
