@@ -1,7 +1,10 @@
 import axios from "axios";
 
+const API_BASE_URL =
+  "https://student-performance-prediction-system-zhvt.onrender.com/api/";
+
 const api = axios.create({
-  baseURL: "http://127.0.0.1:8000/api/",
+  baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -29,7 +32,6 @@ api.interceptors.request.use(
     return Promise.reject(error);
   }
 );
-
 
 // ==========================================
 // RESPONSE INTERCEPTOR
@@ -63,7 +65,7 @@ api.interceptors.response.use(
       try {
         // Request new access token
         const response = await axios.post(
-          "http://127.0.0.1:8000/api/token/refresh/",
+          `${API_BASE_URL}token/refresh/`,
           {
             refresh: refreshToken,
           }
@@ -86,7 +88,6 @@ api.interceptors.response.use(
         return api(originalRequest);
 
       } catch (refreshError) {
-        // Refresh token also expired
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
 
