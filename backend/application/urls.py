@@ -17,6 +17,7 @@ from .views import (
     RefreshStudyHabitSuggestionView,
     AcademicPerformanceView,
     PublicStatsView,
+    ClassRoomListView
 )
 
 
@@ -180,6 +181,11 @@ path(
     "student/academic-performance/",
     AcademicPerformanceView.as_view(),
     name="student-academic-performance"
+),
+path(
+    "classes/",
+    ClassRoomListView.as_view(),
+    name="class-list",
 ),
 
 ]

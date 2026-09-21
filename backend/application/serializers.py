@@ -396,3 +396,8 @@ class AcademicPerformanceSerializer(serializers.ModelSerializer):
         ).count()
 
         return round((present / total) * 100, 2)        
+
+class ClassRoomSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClassRoom
+        fields = ["id", "name", "semester", "division"]    

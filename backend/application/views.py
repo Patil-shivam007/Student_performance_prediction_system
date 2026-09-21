@@ -1186,4 +1186,13 @@ class PublicStatsView(APIView):
                 "onTrackRate": f"{on_track_rate}%",
             },
             status=status.HTTP_200_OK
-        )        
+        )   
+
+from rest_framework.permissions import AllowAny
+class ClassRoomListView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        classrooms = ClassRoom.objects.all()
+        serializer = ClassRoomSerializer(classrooms, many=True)
+        return Response(serializer.data)      
