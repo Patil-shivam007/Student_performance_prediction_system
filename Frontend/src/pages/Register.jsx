@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import "./Register.css";
@@ -20,37 +20,12 @@ const Register = () => {
     roll_number: "",
   });
 
-  const [classes, setClasses] = useState([]);
-  const [subjects, setSubjects] = useState([]);
-  const [classroomId, setClassroomId] = useState("");
-  const [selectedSubjects, setSelectedSubjects] = useState([]);
-  const [loadingClasses, setLoadingClasses] = useState(true);
-  const [loadingSubjects, setLoadingSubjects] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  useEffect(() => {
-    fetchClasses();
-  }, []);
-
-  const fetchClasses = async () => {
-    try {
-      setLoadingClasses(true);
-      setError("");
-      const response = await api.get("classes/");
-
-      if (response.data.success) {
-        setClasses(response.data.classes);
-      } else {
-        setClasses(response.data);
-      }
-    } catch (err) {
-      console.error("Class loading error:", err);
-      setError("Unable to load classes.");
-    } finally {
-      setLoadingClasses(false);
-    }
-  };
+  const [year, setYear] = useState("");
+  const [semester, setSemester] = useState("");
+  const [division, setDivision] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -61,83 +36,55 @@ const Register = () => {
     }));
   };
 
-  const handleClassChange = async (e) => {
-    const selectedClassId = e.target.value;
+  const handleYearChange = (e) => {
+    const value = e.target.value;
 
-    setClassroomId(selectedClassId);
-    setSubjects([]);
-    setSelectedSubjects([]);
-    setError("");
+    setYear(value);
+    setSemester("");
+    setDivision("");
 
-    if (!selectedClassId) {
-      setFormData((prev) => ({
-        ...prev,
-        student_class: "",
-        division: "",
-      }));
-      return;
-    }
-
-    const selectedClass = classes.find(
-      (item) => String(item.id) === String(selectedClassId)
-    );
-
-    if (selectedClass) {
-      setFormData((prev) => ({
-        ...prev,
-        student_class: selectedClass.name,
-        division: selectedClass.division,
-      }));
-    }
-
-    try {
-      setLoadingSubjects(true);
-
-      const response = await api.get(
-        `classes/${selectedClassId}/subjects/`
-      );
-
-      if (response.data.success) {
-        setSubjects(response.data.subjects);
-      } else {
-        setSubjects(response.data);
-      }
-    } catch (err) {
-      console.error("Subject loading error:", err);
-      setError("Unable to load subjects for this class.");
-    } finally {
-      setLoadingSubjects(false);
-    }
+    setFormData((prev) => ({
+      ...prev,
+      student_class: "",
+      division: "",
+    }));
   };
 
-  const handleSubjectChange = (subjectId) => {
-    setSelectedSubjects((prev) =>
-      prev.includes(subjectId)
-        ? prev.filter((id) => id !== subjectId)
-        : [...prev, subjectId]
-    );
+  const handleSemesterChange = (e) => {
+    const value = e.target.value;
+
+    setSemester(value);
+    setDivision("");
+
+    setFormData((prev) => ({
+      ...prev,
+      student_class: "",
+      division: "",
+    }));
+  };
+
+  const handleDivisionChange = (e) => {
+    const value = e.target.value;
+
+    setDivision(value);
+
+    setFormData((prev) => ({
+      ...prev,
+      division: value,
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     setError("");
     setSuccess("");
-
-    if (!classroomId) {
-      setError("Please select your class.");
-      return;
-    }
-
-    if (selectedSubjects.length === 0) {
-      setError("Please select at least one subject.");
-      return;
-    }
 
     try {
       const registrationData = {
         ...formData,
-        classroom_id: Number(classroomId),
-        subject_ids: selectedSubjects.map((id) => Number(id)),
+        student_class: semester,
+        division: division,
       };
 
       const response = await api.post("register/", registrationData);
@@ -159,11 +106,13 @@ const Register = () => {
           roll_number: "",
         });
 
-        setClassroomId("");
-        setSelectedSubjects([]);
-        setSubjects([]);
+        setYear("");
+        setSemester("");
+        setDivision("");
 
-        setTimeout(() => navigate("/"), 1500);
+        setTimeout(() => {
+          navigate("/");
+        }, 1500);
       }
     } catch (err) {
       console.error("Registration error:", err);
@@ -181,6 +130,7 @@ const Register = () => {
               if (Array.isArray(message)) {
                 return `${field}: ${message.join(", ")}`;
               }
+
               return `${field}: ${message}`;
             })
             .join(" | ");
@@ -192,10 +142,6 @@ const Register = () => {
       }
     }
   };
-
-  const selectedClass = classes.find(
-    (item) => String(item.id) === String(classroomId)
-  );
 
   return (
     <div className="register-page">
@@ -218,14 +164,26 @@ const Register = () => {
             <p>Register as a student</p>
           </div>
 
-          {error && <div className="error-message">{error}</div>}
-          {success && <div className="success-message">{success}</div>}
+          {error && (
+            <div className="error-message">
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="success-message">
+              {success}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit}>
 
+            {/* FIRST NAME + LAST NAME */}
             <div className="form-row">
+
               <div className="form-group">
                 <label>First Name</label>
+
                 <input
                   type="text"
                   name="first_name"
@@ -238,6 +196,7 @@ const Register = () => {
 
               <div className="form-group">
                 <label>Last Name</label>
+
                 <input
                   type="text"
                   name="last_name"
@@ -247,10 +206,13 @@ const Register = () => {
                   required
                 />
               </div>
+
             </div>
 
+            {/* USERNAME */}
             <div className="form-group">
               <label>Username</label>
+
               <input
                 type="text"
                 name="username"
@@ -261,8 +223,10 @@ const Register = () => {
               />
             </div>
 
+            {/* EMAIL */}
             <div className="form-group">
               <label>Email</label>
+
               <input
                 type="email"
                 name="email"
@@ -273,8 +237,10 @@ const Register = () => {
               />
             </div>
 
+            {/* PASSWORD */}
             <div className="form-group">
               <label>Password</label>
+
               <input
                 type="password"
                 name="password"
@@ -284,11 +250,16 @@ const Register = () => {
                 minLength={8}
                 required
               />
-              <small>Password must contain at least 8 characters.</small>
+
+              <small>
+                Password must contain at least 8 characters.
+              </small>
             </div>
 
+            {/* PHONE */}
             <div className="form-group">
               <label>Phone</label>
+
               <input
                 type="tel"
                 name="phone"
@@ -299,9 +270,12 @@ const Register = () => {
               />
             </div>
 
+            {/* DOB + GENDER */}
             <div className="form-row">
+
               <div className="form-group">
                 <label>Date of Birth</label>
+
                 <input
                   type="date"
                   name="date_of_birth"
@@ -313,6 +287,7 @@ const Register = () => {
 
               <div className="form-group">
                 <label>Gender</label>
+
                 <select
                   name="gender"
                   value={formData.gender}
@@ -325,45 +300,109 @@ const Register = () => {
                   <option value="Other">Other</option>
                 </select>
               </div>
+
             </div>
 
+            {/* YEAR */}
             <div className="form-group">
-              <label>Class</label>
-              <select
-                value={classroomId}
-                onChange={handleClassChange}
-                required
-                disabled={loadingClasses}
-              >
-                <option value="">
-                  {loadingClasses ? "Loading classes..." : "Select Class"}
-                </option>
+              <label>Year</label>
 
-                {classes.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name} - Semester {item.semester} - Division{" "}
-                    {item.division}
-                  </option>
-                ))}
+              <select
+                value={year}
+                onChange={handleYearChange}
+                required
+              >
+                <option value="">Select Year</option>
+                <option value="1">First Year</option>
+                <option value="2">Second Year</option>
+                <option value="3">Third Year</option>
               </select>
             </div>
 
-            {classroomId && selectedClass && (
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Semester</label>
-                  <input type="text" value={selectedClass.semester} readOnly />
-                </div>
+            {/* SEMESTER */}
+            <div className="form-group">
+              <label>Semester</label>
 
-                <div className="form-group">
-                  <label>Division</label>
-                  <input type="text" value={selectedClass.division} readOnly />
-                </div>
-              </div>
-            )}
+              <select
+                value={semester}
+                onChange={handleSemesterChange}
+                required
+                disabled={!year}
+              >
+                <option value="">
+                  Select Semester
+                </option>
 
+                {year === "1" && (
+                  <>
+                    <option value="1">
+                      Semester 1
+                    </option>
+
+                    <option value="2">
+                      Semester 2
+                    </option>
+                  </>
+                )}
+
+                {year === "2" && (
+                  <>
+                    <option value="3">
+                      Semester 3
+                    </option>
+
+                    <option value="4">
+                      Semester 4
+                    </option>
+                  </>
+                )}
+
+                {year === "3" && (
+                  <>
+                    <option value="5">
+                      Semester 5
+                    </option>
+
+                    <option value="6">
+                      Semester 6
+                    </option>
+                  </>
+                )}
+              </select>
+            </div>
+
+            {/* DIVISION */}
+            <div className="form-group">
+              <label>Division</label>
+
+              <select
+                value={division}
+                onChange={handleDivisionChange}
+                required
+                disabled={!semester}
+              >
+                <option value="">
+                  Select Division
+                </option>
+
+                <option value="A">
+                  Division A
+                </option>
+
+                <option value="B">
+                  Division B
+                </option>
+
+                <option value="C">
+                  Division C
+                </option>
+              </select>
+            </div>
+
+            {/* ROLL NUMBER */}
             <div className="form-group">
               <label>Roll Number</label>
+
               <input
                 type="number"
                 name="roll_number"
@@ -374,77 +413,33 @@ const Register = () => {
               />
             </div>
 
-            {classroomId && (
-              <div className="form-group">
-                <label>Select Subjects</label>
-
-                {loadingSubjects ? (
-                  <div className="subjects-loading">Loading subjects...</div>
-                ) : subjects.length === 0 ? (
-                  <div className="subjects-empty">
-                    No subjects available for this class.
-                  </div>
-                ) : (
-                  <div className="subject-selection">
-                    {subjects.map((item) => {
-                      const isSelected = selectedSubjects.includes(item.id);
-
-                      return (
-                        <label
-                          key={item.id}
-                          className={`subject-option ${
-                            isSelected ? "selected" : ""
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => handleSubjectChange(item.id)}
-                          />
-
-                          <div className="subject-info">
-                            <strong>{item.name}</strong>
-
-                            {item.code && (
-                              <span>Code: {item.code}</span>
-                            )}
-
-                            <span>
-                              Teacher:{" "}
-                              {item.teacher_name ||
-                                item.teacher_username ||
-                                "Assigned Teacher"}
-                            </span>
-                          </div>
-                        </label>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {selectedSubjects.length > 0 && (
-              <div className="selected-subject-count">
-                {selectedSubjects.length} subject
-                {selectedSubjects.length > 1 ? "s" : ""} selected
-              </div>
-            )}
-
-            <button type="submit" className="register-btn">
+            {/* REGISTER BUTTON */}
+            <button
+              type="submit"
+              className="register-btn"
+            >
               Create Account
             </button>
+
           </form>
 
+          {/* LOGIN LINK */}
           <div className="login-link">
-            <span>Already have an account?</span>
-            <button type="button" onClick={() => navigate("/")}>
+            <span>
+              Already have an account?
+            </span>
+
+            <button
+              type="button"
+              onClick={() => navigate("/")}
+            >
               Login
             </button>
           </div>
 
         </div>
       </div>
+
     </div>
   );
 };
