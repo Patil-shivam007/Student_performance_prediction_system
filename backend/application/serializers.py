@@ -49,14 +49,12 @@ class StudentRegistrationSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
 
-        # Remove user registration data
         username = validated_data.pop('username')
         password = validated_data.pop('password')
         email = validated_data.pop('email')
         first_name = validated_data.pop('first_name')
         last_name = validated_data.pop('last_name')
 
-        # Create user
         user = User.objects.create_user(
             username=username,
             email=email,
@@ -65,14 +63,12 @@ class StudentRegistrationSerializer(serializers.ModelSerializer):
             last_name=last_name
         )
 
-        # Add Student group
         student_group = Group.objects.get(
             name="Student"
         )
 
         user.groups.add(student_group)
 
-        # Create student profile
         student = StudentProfile.objects.create(
             user=user,
             **validated_data
