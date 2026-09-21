@@ -30,16 +30,6 @@ class StudentRegistrationSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField()
     last_name = serializers.CharField()
 
-    # New fields
-    classroom_id = serializers.IntegerField(
-        write_only=True
-    )
-
-    subject_ids = serializers.ListField(
-        child=serializers.IntegerField(),
-        write_only=True
-    )
-
     class Meta:
         model = StudentProfile
 
@@ -55,34 +45,16 @@ class StudentRegistrationSerializer(serializers.ModelSerializer):
             'student_class',
             'division',
             'roll_number',
-
-            # New
-            'classroom_id',
-            'subject_ids',
         ]
 
     def create(self, validated_data):
 
-        # Remove registration data
+        # Remove user registration data
         username = validated_data.pop('username')
         password = validated_data.pop('password')
         email = validated_data.pop('email')
         first_name = validated_data.pop('first_name')
         last_name = validated_data.pop('last_name')
-
-        # Remove new fields
-        classroom_id = validated_data.pop('classroom_id')
-        subject_ids = validated_data.pop('subject_ids')
-
-        # Get classroom
-        try:
-            classroom = ClassRoom.objects.get(
-                id=classroom_id
-            )
-        except ClassRoom.DoesNotExist:
-            raise serializers.ValidationError({
-                "classroom_id": "Invalid classroom."
-            })
 
         # Create user
         user = User.objects.create_user(
@@ -105,40 +77,6 @@ class StudentRegistrationSerializer(serializers.ModelSerializer):
             user=user,
             **validated_data
         )
-
-        # Create StudentSubject records
-        for subject_id in subject_ids:
-
-            try:
-                subject = Subject.objects.get(
-                    id=subject_id
-                )
-            except Subject.DoesNotExist:
-                raise serializers.ValidationError({
-                    "subject_ids":
-                    f"Subject with id {subject_id} does not exist."
-                })
-
-            # Find teacher allocated to this
-            # class + subject
-            allocation = TeacherAllocation.objects.filter(
-                classroom=classroom,
-                subject=subject
-            ).first()
-
-            if not allocation:
-                raise serializers.ValidationError({
-                    "subject_ids":
-                    f"No teacher is allocated for {subject.name} "
-                    f"in this class."
-                })
-
-            StudentSubject.objects.create(
-                student=user,
-                classroom=classroom,
-                subject=subject,
-                teacher=allocation.teacher
-            )
 
         return student
 from rest_framework import serializers
