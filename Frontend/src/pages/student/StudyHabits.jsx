@@ -24,7 +24,7 @@ const StudyHabits = () => {
       }
 
       const response = await axios.get(
-        "http://127.0.0.1:8000/api/student/study-habits/suggestions/",
+        "https://student-performance-prediction-system-zhvt.onrender.com/api/student/study-habits/suggestions/",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -67,7 +67,7 @@ const StudyHabits = () => {
       }
 
       await axios.post(
-        "http://127.0.0.1:8000/api/student/study-habits/suggestions/refresh/",
+        "https://student-performance-prediction-system-zhvt.onrender.com/api/student/study-habits/suggestions/refresh/",
         {},
         {
           headers: {

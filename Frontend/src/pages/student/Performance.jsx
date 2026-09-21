@@ -3,7 +3,7 @@ import axios from "axios";
 import "./Performance.css";
 
 const API_URL =
-  "http://127.0.0.1:8000/api/student/academic-performance/";
+  "https://student-performance-prediction-system-zhvt.onrender.com/api/student/academic-performance/";
 
 function Performance() {
   const [data, setData] = useState(null);

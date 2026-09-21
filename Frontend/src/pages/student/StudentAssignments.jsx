@@ -17,7 +17,7 @@ const StudentAssignments = () => {
       const token = localStorage.getItem("access_token");
 
       const response = await axios.get(
-        "http://127.0.0.1:8000/api/student/assignments/",
+        "https://student-performance-prediction-system-zhvt.onrender.com/api/student/assignments/",
         {
           headers: {
             Authorization: `Bearer ${token}`,
