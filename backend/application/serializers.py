@@ -47,6 +47,13 @@ class StudentRegistrationSerializer(serializers.ModelSerializer):
             'roll_number',
         ]
 
+    def validate_username(self, value):
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError(
+                "This username is already registered."
+            )
+        return value
+
     def create(self, validated_data):
 
         username = validated_data.pop('username')
