@@ -11,6 +11,7 @@ from .models import (
     Attendance,
     StudyHabit,
     StudentSubject,
+    Subject
 )
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -256,7 +257,7 @@ Rules:
 def generate_initial_study_habits(student):
     """
     Use Gemini to automatically create personalized
-    study habits for the student's subjects.
+    study habits based on the student's prediction history.
     """
 
     # Get student's prediction history
@@ -271,24 +272,39 @@ def generate_initial_study_habits(student):
             "No prediction data found. Please make a prediction first."
         )
 
-    # Get student's subjects
-    student_subjects = (
-        StudentSubject.objects
-        .filter(student=student)
-        .select_related("subject")
-    )
+    # Get subjects directly from prediction history
+    subject_names = []
 
-    if not student_subjects.exists():
+    for prediction in predictions:
+        subject = prediction.subject
+
+        # Support both a Subject object and a string subject field
+        if hasattr(subject, "name"):
+            subject_name = subject.name
+        else:
+            subject_name = str(subject)
+
+        if subject_name and subject_name not in subject_names:
+            subject_names.append(subject_name)
+
+    if not subject_names:
         raise ValueError(
-            "No subjects found for this student."
+            "No subjects found in prediction history."
         )
 
     # Prepare academic information
     academic_data = []
 
     for prediction in predictions:
+        subject = prediction.subject
+
+        if hasattr(subject, "name"):
+            subject_name = subject.name
+        else:
+            subject_name = str(subject)
+
         academic_data.append({
-            "subject": prediction.subject,
+            "subject": subject_name,
             "predicted_final_marks": prediction.predicted_final_marks,
             "performance_category": prediction.performance_category,
             "attendance_percentage": prediction.attendance_percentage,
@@ -303,11 +319,6 @@ def generate_initial_study_habits(student):
             ),
         })
 
-    subjects = [
-        student_subject.subject.name
-        for student_subject in student_subjects
-    ]
-
     prompt = f"""
 You are an AI study planner for a college student.
 
@@ -317,7 +328,7 @@ STUDENT:
 {student.username}
 
 SUBJECTS:
-{json.dumps(subjects)}
+{json.dumps(subject_names)}
 
 ACADEMIC PERFORMANCE:
 {json.dumps(academic_data, default=str)}
@@ -353,9 +364,9 @@ Return ONLY valid JSON.
 
 Use exactly this format:
 
-{
+{{
     "study_habits": [
-        {
+        {{
             "subject": "Python Programming",
             "study_hours_per_day": 2.0,
             "preferred_study_time": "6:00 PM - 8:00 PM",
@@ -363,9 +374,9 @@ Use exactly this format:
             "distractions": "Mobile phone and social media",
             "sleep_hours": 7.0,
             "notes": "Focus on Python fundamentals and practical coding."
-        }
+        }}
     ]
-}
+}}
 """
 
     payload = {
@@ -432,15 +443,10 @@ Use exactly this format:
         if not subject_name:
             continue
 
-        subject = next(
-            (
-                student_subject.subject
-                for student_subject in student_subjects
-                if student_subject.subject.name.lower()
-                == subject_name.lower()
-            ),
-            None
-        )
+        # Find the Django Subject using the name
+        subject = Subject.objects.filter(
+            name__iexact=subject_name
+        ).first()
 
         if not subject:
             continue
@@ -449,40 +455,28 @@ Use exactly this format:
             student=student,
             subject=subject,
             defaults={
-                "study_hours_per_day": (
-                    habit_data.get(
-                        "study_hours_per_day",
-                        1.0
-                    )
+                "study_hours_per_day": habit_data.get(
+                    "study_hours_per_day",
+                    1.0
                 ),
-                "preferred_study_time": (
-                    habit_data.get(
-                        "preferred_study_time"
-                    )
+                "preferred_study_time": habit_data.get(
+                    "preferred_study_time"
                 ),
-                "study_method": (
-                    habit_data.get(
-                        "study_method"
-                    )
+                "study_method": habit_data.get(
+                    "study_method"
                 ),
-                "distractions": (
-                    habit_data.get(
-                        "distractions"
-                    )
+                "distractions": habit_data.get(
+                    "distractions"
                 ),
-                "sleep_hours": (
-                    habit_data.get(
-                        "sleep_hours"
-                    )
+                "sleep_hours": habit_data.get(
+                    "sleep_hours"
                 ),
-                "notes": (
-                    habit_data.get(
-                        "notes"
-                    )
+                "notes": habit_data.get(
+                    "notes"
                 ),
             }
         )
 
         created_habits.append(habit)
 
-    return created_habits    
+    return created_habits
