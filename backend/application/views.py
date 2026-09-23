@@ -1002,96 +1002,212 @@ class StudyHabitSuggestionView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        """
-        GET only returns saved AI suggestions.
-        It does NOT call Ollama.
-        """
 
-        habits = (
-            StudyHabit.objects
-            .filter(student=request.user)
-            .select_related("subject")
-            .order_by("-updated_at")
-        )
-
-        if not habits.exists():
-            return Response(
-                {
-                    "error": "No study habits found. Please add your study habits first."
-                },
-                status=status.HTTP_404_NOT_FOUND
+        try:
+            habits = (
+                StudyHabit.objects
+                .filter(student=request.user)
+                .select_related("subject")
+                .order_by("-updated_at")
             )
 
-        suggestions = []
+            # ---------------------------------
+            # STEP 1: Create AI study habits
+            # if they don't exist
+            # ---------------------------------
+            if not habits.exists():
 
-        for habit in habits:
+                print("No study habits found.")
+                print("Generating study habits using Gemini...")
 
-            suggestion = habit.ai_suggestion
+                generate_initial_study_habits(
+                    request.user
+                )
 
-            if not suggestion:
-                suggestion = {
-                    "error": "AI suggestion has not been generated yet."
-                }
+                habits = (
+                    StudyHabit.objects
+                    .filter(student=request.user)
+                    .select_related("subject")
+                    .order_by("-updated_at")
+                )
 
-            suggestions.append({
-                "subject": habit.subject.name,
-                "suggestion": suggestion
+                # Generate AI suggestions for newly created habits
+                for habit in habits:
+
+                    print(
+                        f"Generating AI suggestion for "
+                        f"{habit.subject.name}"
+                    )
+
+                    ai_result = generate_study_suggestions(
+                        habit
+                    )
+
+                    habit.ai_suggestion = ai_result
+
+                    habit.save(
+                        update_fields=[
+                            "ai_suggestion",
+                            "ai_generated_at"
+                        ]
+                    )
+
+            if not habits.exists():
+                return Response(
+                    {
+                        "error": "Unable to create study habits."
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # ---------------------------------
+            # STEP 2: Return saved AI suggestions
+            # ---------------------------------
+            suggestions = []
+
+            for habit in habits:
+
+                suggestion = habit.ai_suggestion
+
+                if not suggestion:
+                    suggestion = {
+                        "error": "AI suggestion has not been generated yet."
+                    }
+
+                suggestions.append({
+                    "subject": habit.subject.name,
+                    "suggestion": suggestion
+                })
+
+            return Response({
+                "student": request.user.username,
+                "suggestions": suggestions
             })
 
-        return Response({
-            "student": request.user.username,
-            "suggestions": suggestions
-        })
+        except ValueError as e:
 
+            return Response(
+                {
+                    "error": str(e)
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
+        except Exception as e:
+
+            import traceback
+            traceback.print_exc()
+
+            return Response(
+                {
+                    "error": "Unable to load AI study recommendations.",
+                    "details": str(e)
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+from .services import generate_study_suggestions,generate_initial_study_habits
 class RefreshStudyHabitSuggestionView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        """
-        POST generates fresh AI suggestions.
-        This should be called after login.
-        """
 
-        habits = (
-            StudyHabit.objects
-            .filter(student=request.user)
-            .select_related("subject")
-        )
+        try:
+            habits = (
+                StudyHabit.objects
+                .filter(student=request.user)
+                .select_related("subject")
+            )
 
-        if not habits.exists():
+            # ---------------------------------
+            # STEP 1: Create habits using AI
+            # ---------------------------------
+            if not habits.exists():
+
+                print("No study habits found.")
+                print("Generating study habits using Gemini...")
+
+                generate_initial_study_habits(
+                    request.user
+                )
+
+                habits = (
+                    StudyHabit.objects
+                    .filter(student=request.user)
+                    .select_related("subject")
+                )
+
+            # ---------------------------------
+            # STEP 2: Generate AI suggestions
+            # ---------------------------------
+            if not habits.exists():
+                return Response(
+                    {
+                        "error": "Unable to create study habits."
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            suggestions = []
+
+            for habit in habits:
+
+                print(
+                    f"Generating AI suggestion for "
+                    f"{habit.subject.name}"
+                )
+
+                ai_result = generate_study_suggestions(
+                    habit
+                )
+
+                habit.ai_suggestion = ai_result
+
+                habit.save(
+                    update_fields=[
+                        "ai_suggestion",
+                        "ai_generated_at"
+                    ]
+                )
+
+                suggestions.append({
+                    "subject": habit.subject.name,
+                    "suggestion": ai_result
+                })
+
             return Response(
                 {
-                    "error": "No study habits found."
+                    "student": request.user.username,
+                    "suggestions": suggestions,
+                    "message": (
+                        "AI study habits and "
+                        "recommendations generated successfully."
+                    )
                 },
-                status=status.HTTP_404_NOT_FOUND
+                status=status.HTTP_200_OK
             )
 
-        suggestions = []
+        except ValueError as e:
 
-        for habit in habits:
-
-            ai_result = generate_study_suggestions(habit)
-
-            habit.ai_suggestion = ai_result
-            habit.save(
-                update_fields=[
-                    "ai_suggestion",
-                    "ai_generated_at"
-                ]
+            return Response(
+                {
+                    "error": str(e)
+                },
+                status=status.HTTP_400_BAD_REQUEST
             )
 
-            suggestions.append({
-                "subject": habit.subject.name,
-                "suggestion": ai_result
-            })
+        except Exception as e:
 
-        return Response({
-            "student": request.user.username,
-            "suggestions": suggestions,
-            "message": "AI study suggestions regenerated successfully."
-        })
+            import traceback
+            traceback.print_exc()
 
+            return Response(
+                {
+                    "error": "Unable to generate AI study recommendations.",
+                    "details": str(e)
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated

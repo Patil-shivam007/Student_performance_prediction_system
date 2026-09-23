@@ -4,8 +4,17 @@ import requests
 from .models import PredictionHistory, Attendance
 
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
-OLLAMA_MODEL = "llama3.2:1b"
+import os
+
+from .models import (
+    PredictionHistory,
+    Attendance,
+    StudyHabit,
+    StudentSubject,
+)
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent"
 
 
 def generate_study_suggestions(study_habit):
@@ -176,21 +185,35 @@ Rules:
 - Do not include Markdown.
 - Return JSON only.
 """
-
+    
     # --------------------------------------------------
-    # 5. Send request to Ollama
+    # 5. Send request to Gemini
     # --------------------------------------------------
 
     payload = {
-        "model": OLLAMA_MODEL,
-        "prompt": prompt,
-        "stream": False,
-        "format": "json"
+        "contents": [
+            {
+                "parts": [
+                    {
+                        "text": prompt
+                    }
+                ]
+            }
+        ],
+        "generationConfig": {
+            "responseMimeType": "application/json"
+        }
+    }
+
+    headers = {
+        "Content-Type": "application/json",
+        "x-goog-api-key": GEMINI_API_KEY
     }
 
     try:
         response = requests.post(
-            OLLAMA_URL,
+            GEMINI_URL,
+            headers=headers,
             json=payload,
             timeout=120
         )
@@ -199,7 +222,10 @@ Rules:
 
         data = response.json()
 
-        ai_response = data.get("response", "").strip()
+        ai_response = (
+            data["candidates"][0]["content"]["parts"][0]["text"]
+            .strip()
+        )
 
         # --------------------------------------------------
         # 6. Convert JSON string to Python dictionary
@@ -209,7 +235,7 @@ Rules:
 
     except requests.exceptions.ConnectionError:
         return {
-            "error": "Ollama is not running. Please start Ollama."
+            "error": "Unable to connect to Gemini API."
         }
 
     except requests.exceptions.Timeout:
@@ -227,3 +253,236 @@ Rules:
         return {
             "error": f"Unable to generate study suggestions: {str(e)}"
         }
+def generate_initial_study_habits(student):
+    """
+    Use Gemini to automatically create personalized
+    study habits for the student's subjects.
+    """
+
+    # Get student's prediction history
+    predictions = (
+        PredictionHistory.objects
+        .filter(student=student)
+        .order_by("-created_at")
+    )
+
+    if not predictions.exists():
+        raise ValueError(
+            "No prediction data found. Please make a prediction first."
+        )
+
+    # Get student's subjects
+    student_subjects = (
+        StudentSubject.objects
+        .filter(student=student)
+        .select_related("subject")
+    )
+
+    if not student_subjects.exists():
+        raise ValueError(
+            "No subjects found for this student."
+        )
+
+    # Prepare academic information
+    academic_data = []
+
+    for prediction in predictions:
+        academic_data.append({
+            "subject": prediction.subject,
+            "predicted_final_marks": prediction.predicted_final_marks,
+            "performance_category": prediction.performance_category,
+            "attendance_percentage": prediction.attendance_percentage,
+            "study_hours_per_day": prediction.study_hours_per_day,
+            "assignment_completion_percentage": (
+                prediction.assignment_completion_percentage
+            ),
+            "internal_marks": prediction.internal_marks,
+            "midterm_marks": prediction.midterm_marks,
+            "previous_semester_sgpa": (
+                prediction.previous_semester_sgpa
+            ),
+        })
+
+    subjects = [
+        student_subject.subject.name
+        for student_subject in student_subjects
+    ]
+
+    prompt = f"""
+You are an AI study planner for a college student.
+
+Create personalized study habits for this student.
+
+STUDENT:
+{student.username}
+
+SUBJECTS:
+{json.dumps(subjects)}
+
+ACADEMIC PERFORMANCE:
+{json.dumps(academic_data, default=str)}
+
+For every subject, create a practical study habit.
+
+The study habit must contain:
+
+- subject
+- study_hours_per_day
+- preferred_study_time
+- study_method
+- distractions
+- sleep_hours
+- notes
+
+Consider:
+- predicted marks
+- performance category
+- attendance
+- current study hours
+- assignment completion
+- internal marks
+- midterm marks
+- previous semester SGPA
+
+Give more study time to subjects where the student
+needs more improvement.
+
+Do not give medical advice.
+
+Return ONLY valid JSON.
+
+Use exactly this format:
+
+{
+    "study_habits": [
+        {
+            "subject": "Python Programming",
+            "study_hours_per_day": 2.0,
+            "preferred_study_time": "6:00 PM - 8:00 PM",
+            "study_method": "Practice coding and solve problems",
+            "distractions": "Mobile phone and social media",
+            "sleep_hours": 7.0,
+            "notes": "Focus on Python fundamentals and practical coding."
+        }
+    ]
+}
+"""
+
+    payload = {
+        "contents": [
+            {
+                "parts": [
+                    {
+                        "text": prompt
+                    }
+                ]
+            }
+        ],
+        "generationConfig": {
+            "responseMimeType": "application/json"
+        }
+    }
+
+    headers = {
+        "Content-Type": "application/json",
+        "x-goog-api-key": GEMINI_API_KEY
+    }
+
+    try:
+        response = requests.post(
+            GEMINI_URL,
+            headers=headers,
+            json=payload,
+            timeout=120
+        )
+
+        response.raise_for_status()
+
+        data = response.json()
+
+        ai_response = (
+            data["candidates"][0]["content"]["parts"][0]["text"]
+            .strip()
+        )
+
+        result = json.loads(ai_response)
+
+    except requests.exceptions.Timeout:
+        raise ValueError(
+            "Gemini request timed out."
+        )
+
+    except requests.exceptions.RequestException as e:
+        raise ValueError(
+            f"Gemini request failed: {str(e)}"
+        )
+
+    except (KeyError, IndexError, json.JSONDecodeError):
+        raise ValueError(
+            "Gemini returned an invalid response."
+        )
+
+    # Save generated habits
+    created_habits = []
+
+    for habit_data in result.get("study_habits", []):
+
+        subject_name = habit_data.get("subject")
+
+        if not subject_name:
+            continue
+
+        subject = next(
+            (
+                student_subject.subject
+                for student_subject in student_subjects
+                if student_subject.subject.name.lower()
+                == subject_name.lower()
+            ),
+            None
+        )
+
+        if not subject:
+            continue
+
+        habit, created = StudyHabit.objects.update_or_create(
+            student=student,
+            subject=subject,
+            defaults={
+                "study_hours_per_day": (
+                    habit_data.get(
+                        "study_hours_per_day",
+                        1.0
+                    )
+                ),
+                "preferred_study_time": (
+                    habit_data.get(
+                        "preferred_study_time"
+                    )
+                ),
+                "study_method": (
+                    habit_data.get(
+                        "study_method"
+                    )
+                ),
+                "distractions": (
+                    habit_data.get(
+                        "distractions"
+                    )
+                ),
+                "sleep_hours": (
+                    habit_data.get(
+                        "sleep_hours"
+                    )
+                ),
+                "notes": (
+                    habit_data.get(
+                        "notes"
+                    )
+                ),
+            }
+        )
+
+        created_habits.append(habit)
+
+    return created_habits    
