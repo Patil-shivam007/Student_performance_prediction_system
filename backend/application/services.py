@@ -14,9 +14,11 @@ from .models import (
     Subject
 )
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+import os
 
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+# Append the key parameter to the URL endpoint
+GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
 
 def generate_study_suggestions(study_habit):
     """
