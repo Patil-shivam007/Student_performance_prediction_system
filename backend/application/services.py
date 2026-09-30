@@ -15,7 +15,8 @@ from .models import (
 )
 
 import os
-
+import json
+from pathlib import Path
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 # Append the key parameter to the URL endpoint
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
@@ -482,3 +483,34 @@ Use exactly this format:
         created_habits.append(habit)
 
     return created_habits
+
+def get_json_study_habits(student):
+    """
+    Get study habits from the temporary JSON file.
+    """
+
+    json_file = (
+        Path(__file__).resolve().parent
+        / "data"
+        / "study_habits.json"
+    )
+
+    if not json_file.exists():
+        raise ValueError("Study habits JSON file not found.")
+
+    try:
+        with open(json_file, "r", encoding="utf-8") as file:
+            data = json.load(file)
+    except json.JSONDecodeError:
+        raise ValueError("Study habits JSON file contains invalid JSON.")
+
+    username = student.username
+
+    student_data = data.get("students", {}).get(username)
+
+    if not student_data:
+        raise ValueError(
+            f"No study habits found for student '{username}'."
+        )
+
+    return student_data.get("study_habits", [])

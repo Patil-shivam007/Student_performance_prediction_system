@@ -14,6 +14,8 @@ import Settings from "../pages/student/Settings";
 import Attendance from "../pages/student/Attendance";
 import StudentAssignments from "../pages/student/StudentAssignments";
 import StudyHabits from "../pages/student/StudyHabits";
+import HelpSupport from "../pages/student/HelpSupport";
+
 
 function StudentRoutes() {
   return (
@@ -67,6 +69,7 @@ function StudentRoutes() {
           path="reports"
           element={<Reports />}
         />
+        <Route path="help" element={<HelpSupport />} />
 
         <Route
           path="settings"

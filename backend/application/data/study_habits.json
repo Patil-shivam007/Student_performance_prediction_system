@@ -1,0 +1,88 @@
+{
+  "students": {
+    "shivam_patil": {
+      "study_habits": [
+        {
+          "subject": "Python Programming",
+          "study_hours_per_day": 2.0,
+          "preferred_study_time": "6:00 PM - 8:00 PM",
+          "study_method": "Practice coding and solve programming problems",
+          "distractions": "Mobile phone and social media",
+          "sleep_hours": 7.0,
+          "notes": "Focus on Python fundamentals, OOP, exception handling, file handling, and practical coding."
+        },
+        {
+          "subject": "Machine Learning",
+          "study_hours_per_day": 2.0,
+          "preferred_study_time": "8:00 PM - 10:00 PM",
+          "study_method": "Study concepts and implement ML algorithms using Python",
+          "distractions": "Mobile phone and unnecessary browsing",
+          "sleep_hours": 7.0,
+          "notes": "Focus on regression, classification, model evaluation, and practical projects."
+        },
+        {
+          "subject": "Database Management",
+          "study_hours_per_day": 1.5,
+          "preferred_study_time": "10:00 AM - 11:30 AM",
+          "study_method": "Practice SQL queries and database design",
+          "distractions": "Social media",
+          "sleep_hours": 7.0,
+          "notes": "Practice SELECT, JOIN, GROUP BY, subqueries, normalization, and database relationships."
+        },
+        {
+          "subject": "Web Development",
+          "study_hours_per_day": 1.5,
+          "preferred_study_time": "4:00 PM - 5:30 PM",
+          "study_method": "Build small frontend and backend features",
+          "distractions": "Mobile phone",
+          "sleep_hours": 7.0,
+          "notes": "Practice HTML, CSS, JavaScript, React, Django, REST APIs, and frontend-backend integration."
+        }
+      ]
+    },
+    "rahul123": {
+      "study_habits": [
+        {
+          "subject": "Python Programming",
+          "study_hours_per_day": 1.5,
+          "preferred_study_time": "6:00 PM - 7:30 PM",
+          "study_method": "Practice Python programs and debugging",
+          "distractions": "Mobile phone",
+          "sleep_hours": 7.0,
+          "notes": "Practice Python syntax, functions, OOP, and problem solving."
+        },
+        {
+          "subject": "Machine Learning",
+          "study_hours_per_day": 2.0,
+          "preferred_study_time": "7:30 PM - 9:30 PM",
+          "study_method": "Study ML concepts and practice with datasets",
+          "distractions": "Social media",
+          "sleep_hours": 7.0,
+          "notes": "Focus on understanding algorithms and implementing them with Python."
+        }
+      ]
+    },
+    "shivam": {
+      "study_habits": [
+        {
+          "subject": "Python Programming",
+          "study_hours_per_day": 2.0,
+          "preferred_study_time": "7:00 PM - 9:00 PM",
+          "study_method": "Coding practice and problem solving",
+          "distractions": "Mobile phone",
+          "sleep_hours": 7.0,
+          "notes": "Practice Python programming regularly."
+        },
+        {
+          "subject": "Database Management",
+          "study_hours_per_day": 1.5,
+          "preferred_study_time": "5:00 PM - 6:30 PM",
+          "study_method": "SQL query practice",
+          "distractions": "Social media",
+          "sleep_hours": 7.0,
+          "notes": "Focus on SQL queries, joins, and database design."
+        }
+      ]
+    }
+  }
+}
