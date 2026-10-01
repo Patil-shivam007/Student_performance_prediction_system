@@ -633,18 +633,20 @@ const overallAttendance =
                     <h3>Attendance Summary</h3>
                     <p>Overall attendance</p>
                   </div>
+                  
+                  <div className="attendance-header-actions">
+                    <button
+                      className="card-action"
+                      onClick={() => navigate("/student/attendance")}
+                    >
+                      View Details
+                    </button>
 
-                  <button
-                    className="card-action"
-                    onClick={() => navigate("/student/attendance")}
-                  >
-                    View Details
-                  </button>
-
-                <span className="material-symbols-outlined card-icon">
-                  event_available
-                </span>
-              </div>
+                    <span className="material-symbols-outlined card-icon">
+                      event_available
+                    </span>
+                  </div>
+                </div>
 
               <div className="attendance-body">
 

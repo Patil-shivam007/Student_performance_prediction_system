@@ -529,10 +529,9 @@
 
 .dashboard-grid {
   display: grid;
-
   grid-template-columns: 1.45fr 1fr;
-
   gap: 20px;
+  align-items: start;
 }
 
 
@@ -542,16 +541,12 @@
 
 .dashboard-card {
   min-width: 0;
-
   padding: 22px;
-
   box-sizing: border-box;
-
   background: #ffffff;
-
   border: 1px solid #e8e9ef;
-
   border-radius: 14px;
+  height: fit-content;
 }
 
 .card-header {
