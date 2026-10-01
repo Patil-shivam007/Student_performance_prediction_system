@@ -633,7 +633,7 @@ const overallAttendance =
                     <h3>Attendance Summary</h3>
                     <p>Overall attendance</p>
                   </div>
-                  
+
                   <div className="attendance-header-actions">
                     <button
                       className="card-action"
@@ -675,19 +675,19 @@ const overallAttendance =
                   <div>
                     <span className="attendance-dot present"></span>
                     <span>Present</span>
-                    <strong>{attendedClasses}</strong>
+                    <strong>{summary.classes_attended}</strong>
                   </div>
 
                   <div>
                     <span className="attendance-dot absent"></span>
                     <span>Absent</span>
-                    <strong>{absentClasses}</strong>
+                    <strong>{summary.classes_absent}</strong>
                   </div>
 
                   <div>
                     <span className="attendance-dot late"></span>
                     <span>Total</span>
-                    <strong>{totalClasses}</strong>
+                    <strong>{summary.overall_attendance}</strong>
                   </div>
 
                 </div>
