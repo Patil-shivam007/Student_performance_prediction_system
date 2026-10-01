@@ -5,9 +5,13 @@ import "./StudentDashboard.css";
 
 function StudentDashboard() {
   const navigate = useNavigate();
-
   const [history, setHistory] = useState([]);
-  const [attendance, setAttendance] = useState([]);
+  const [attendanceSummary, setAttendanceSummary] = useState({
+    overall_attendance: 0,
+    total_classes: 0,
+    classes_attended: 0,
+    classes_absent: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -53,45 +57,79 @@ function StudentDashboard() {
   // FETCH PREDICTION HISTORY
   // =========================================
   useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        setLoading(true);
-        setError("");
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-        const response = await api.get(
-          "student/prediction-history/"
-        );
-        const attendanceResponse = await api.get(
-          "student/attendance/"
-        );
+      // =========================================
+      // CURRENT MONTH AND YEAR
+      // =========================================
 
-        setAttendance(
-          attendanceResponse.data.attendance || []
-        );
-        console.log(
-          "Dashboard Prediction History:",
-          response.data
-        );
+      const today = new Date();
 
-        setHistory(response.data.history || []);
-      } catch (error) {
-        console.error(
-          "Dashboard History Error:",
-          error.response?.data
-        );
+      const currentMonth = today.getMonth() + 1;
+      const currentYear = today.getFullYear();
 
-        setError(
-          error.response?.data?.error ||
-          "Unable to load dashboard data."
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
+      // =========================================
+      // FETCH PREDICTION HISTORY
+      // =========================================
 
-    fetchHistory();
-  }, []);
+      const response = await api.get(
+        "student/prediction-history/"
+      );
 
+      // =========================================
+      // FETCH CURRENT MONTH ATTENDANCE
+      // =========================================
+
+      const attendanceResponse = await api.get(
+        `student/attendance/?month=${currentMonth}&year=${currentYear}`
+      );
+
+      console.log(
+        "Dashboard Prediction History:",
+        response.data
+      );
+
+      console.log(
+        "Dashboard Monthly Attendance:",
+        attendanceResponse.data
+      );
+
+      // =========================================
+      // USE BACKEND MONTHLY SUMMARY
+      // =========================================
+
+      setAttendanceSummary(
+        attendanceResponse.data.summary || {
+          overall_attendance: 0,
+          total_classes: 0,
+          classes_attended: 0,
+          classes_absent: 0,
+        }
+      );
+
+      setHistory(response.data.history || []);
+
+    } catch (error) {
+      console.error(
+        "Dashboard Data Error:",
+        error.response?.data
+      );
+
+      setError(
+        error.response?.data?.error ||
+        "Unable to load dashboard data."
+      );
+
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchDashboardData();
+}, []);
   // =========================================
   // DASHBOARD CALCULATIONS
   // =========================================
@@ -149,24 +187,6 @@ function StudentDashboard() {
 
     return "Needs Improvement";
   };
-  const totalClasses = attendance.reduce(
-  (total, record) =>
-    total + Number(record.total_classes || 0),
-  0
-);
-
-const attendedClasses = attendance.reduce(
-  (total, record) =>
-    total + Number(record.attended_classes || 0),
-  0
-);
-
-const absentClasses = totalClasses - attendedClasses;
-
-const overallAttendance =
-  totalClasses > 0
-    ? ((attendedClasses / totalClasses) * 100).toFixed(2)
-    : 0;
 
   return (
     <div className="dashboard-page">
@@ -659,13 +679,13 @@ const overallAttendance =
                             transparent 59%
                           ),
                           conic-gradient(
-                            #16834b ${overallAttendance}%,
-                            #e7edf0 ${overallAttendance}%
+                            #16834b ${attendanceSummary.overall_attendance}%,
+                            #e7edf0 ${attendanceSummary.overall_attendance}%
                           )
                         `
                       }}>
                   <div>
-                    <strong>{overallAttendance}%</strong>
+                    <strong>{attendanceSummary.overall_attendance}%</strong>
                     <span>Attendance</span>
                   </div>
                 </div>
@@ -674,19 +694,19 @@ const overallAttendance =
                   <div>
                     <span className="attendance-dot present"></span>
                     <span>Present</span>
-                    <strong>{attendedClasses}</strong>
+                    <strong>{attendanceSummary.classes_attended}</strong>
                   </div>
 
                   <div>
                     <span className="attendance-dot absent"></span>
                     <span>Absent</span>
-                    <strong>{absentClasses}</strong>
+                    <strong>{attendanceSummary.classes_absent}</strong>
                   </div>
 
                   <div>
                     <span className="attendance-dot late"></span>
                     <span>Total</span>
-                    <strong>{totalClasses}</strong>
+                    <strong>{attendanceSummary.total_classes}</strong>
                   </div>
 
                 </div>
