@@ -648,7 +648,20 @@ const overallAttendance =
 
               <div className="attendance-body">
 
-                <div className="attendance-circle">
+                <div className="attendance-circle"
+                  style={{
+                        background: `
+                          radial-gradient(
+                            circle,
+                            #ffffff 58%,
+                            transparent 59%
+                          ),
+                          conic-gradient(
+                            #16834b ${overallAttendance}%,
+                            #e7edf0 ${overallAttendance}%
+                          )
+                        `
+                      }}>
                   <div>
                     <strong>{overallAttendance}%</strong>
                     <span>Attendance</span>
