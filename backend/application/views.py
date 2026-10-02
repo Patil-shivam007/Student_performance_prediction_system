@@ -942,15 +942,36 @@ from .models import StudyHabit
 from .serializers import StudyHabitSerializer
 
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
+
+from .models import StudyHabit
+from .serializers import StudyHabitSerializer
+
+from .services import (
+    generate_study_suggestions,
+    generate_initial_study_habits,
+)
+
+
+# ============================================================
+# STUDY HABIT CRUD
+# ============================================================
+
 class StudyHabitView(APIView):
 
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
 
-        habits = StudyHabit.objects.filter(
-            student=request.user
-        ).order_by("-updated_at")
+        habits = (
+            StudyHabit.objects
+            .filter(student=request.user)
+            .select_related("subject")
+            .order_by("-updated_at")
+        )
 
         serializer = StudyHabitSerializer(
             habits,
@@ -958,7 +979,6 @@ class StudyHabitView(APIView):
         )
 
         return Response(serializer.data)
-
 
     def post(self, request):
 
@@ -970,10 +990,12 @@ class StudyHabitView(APIView):
 
             subject = serializer.validated_data["subject"]
 
-            habit, created = StudyHabit.objects.update_or_create(
-                student=request.user,
-                subject=subject,
-                defaults=serializer.validated_data
+            habit, created = (
+                StudyHabit.objects.update_or_create(
+                    student=request.user,
+                    subject=subject,
+                    defaults=serializer.validated_data
+                )
             )
 
             return Response(
@@ -989,21 +1011,20 @@ class StudyHabitView(APIView):
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
 
-from .models import StudyHabit
-from .services import generate_study_suggestions
 
+# ============================================================
+# STUDY HABIT SUGGESTIONS
+# ============================================================
 
 class StudyHabitSuggestionView(APIView):
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
 
         try:
+
             habits = (
                 StudyHabit.objects
                 .filter(student=request.user)
@@ -1011,14 +1032,15 @@ class StudyHabitSuggestionView(APIView):
                 .order_by("-updated_at")
             )
 
-            # ---------------------------------
-            # STEP 1: Create AI study habits
-            # if they don't exist
-            # ---------------------------------
+            # ------------------------------------------------
+            # STEP 1:
+            # Create initial habits if none exist
+            # ------------------------------------------------
+
             if not habits.exists():
 
                 print("No study habits found.")
-                print("Generating study habits using Gemini...")
+                print("Generating study habits...")
 
                 generate_initial_study_habits(
                     request.user
@@ -1031,11 +1053,33 @@ class StudyHabitSuggestionView(APIView):
                     .order_by("-updated_at")
                 )
 
-                # Generate AI suggestions for newly created habits
-                for habit in habits:
+            # ------------------------------------------------
+            # STEP 2:
+            # Check whether habits were created
+            # ------------------------------------------------
+
+            if not habits.exists():
+
+                return Response(
+                    {
+                        "error": "Unable to create study habits."
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # ------------------------------------------------
+            # STEP 3:
+            # Generate missing recommendations
+            # ------------------------------------------------
+
+            suggestions = []
+
+            for habit in habits:
+
+                if not habit.ai_suggestion:
 
                     print(
-                        f"Generating AI suggestion for "
+                        f"Generating study recommendation for "
                         f"{habit.subject.name}"
                     )
 
@@ -1052,32 +1096,19 @@ class StudyHabitSuggestionView(APIView):
                         ]
                     )
 
-            if not habits.exists():
-                return Response(
-                    {
-                        "error": "Unable to create study habits."
-                    },
-                    status=status.HTTP_404_NOT_FOUND
-                )
+                else:
 
-            # ---------------------------------
-            # STEP 2: Return saved AI suggestions
-            # ---------------------------------
-            suggestions = []
-
-            for habit in habits:
-
-                suggestion = habit.ai_suggestion
-
-                if not suggestion:
-                    suggestion = {
-                        "error": "AI suggestion has not been generated yet."
-                    }
+                    ai_result = habit.ai_suggestion
 
                 suggestions.append({
                     "subject": habit.subject.name,
-                    "suggestion": suggestion
+                    "suggestion": ai_result
                 })
+
+            # ------------------------------------------------
+            # STEP 4:
+            # Return recommendations
+            # ------------------------------------------------
 
             return Response({
                 "student": request.user.username,
@@ -1100,31 +1131,43 @@ class StudyHabitSuggestionView(APIView):
 
             return Response(
                 {
-                    "error": "Unable to load AI study recommendations.",
+                    "error": (
+                        "Unable to load study recommendations."
+                    ),
                     "details": str(e)
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-from .services import generate_study_suggestions,generate_initial_study_habits
+
+
+# ============================================================
+# REFRESH STUDY HABIT SUGGESTIONS
+# ============================================================
+
 class RefreshStudyHabitSuggestionView(APIView):
+
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
 
         try:
+
             habits = (
                 StudyHabit.objects
                 .filter(student=request.user)
                 .select_related("subject")
+                .order_by("-updated_at")
             )
 
-            # ---------------------------------
-            # STEP 1: Create habits using AI
-            # ---------------------------------
+            # ------------------------------------------------
+            # STEP 1:
+            # Create habits if none exist
+            # ------------------------------------------------
+
             if not habits.exists():
 
                 print("No study habits found.")
-                print("Generating study habits using Gemini...")
+                print("Generating study habits...")
 
                 generate_initial_study_habits(
                     request.user
@@ -1134,12 +1177,16 @@ class RefreshStudyHabitSuggestionView(APIView):
                     StudyHabit.objects
                     .filter(student=request.user)
                     .select_related("subject")
+                    .order_by("-updated_at")
                 )
 
-            # ---------------------------------
-            # STEP 2: Generate AI suggestions
-            # ---------------------------------
+            # ------------------------------------------------
+            # STEP 2:
+            # Make sure habits exist
+            # ------------------------------------------------
+
             if not habits.exists():
+
                 return Response(
                     {
                         "error": "Unable to create study habits."
@@ -1147,20 +1194,25 @@ class RefreshStudyHabitSuggestionView(APIView):
                     status=status.HTTP_404_NOT_FOUND
                 )
 
+            # ------------------------------------------------
+            # STEP 3:
+            # Regenerate recommendations
+            # ------------------------------------------------
+
             suggestions = []
 
             for habit in habits:
 
                 print(
-                    f"Generating AI suggestion for "
+                    f"Generating study recommendation for "
                     f"{habit.subject.name}"
                 )
 
-                ai_result = generate_study_suggestions(
+                result = generate_study_suggestions(
                     habit
                 )
 
-                habit.ai_suggestion = ai_result
+                habit.ai_suggestion = result
 
                 habit.save(
                     update_fields=[
@@ -1171,16 +1223,21 @@ class RefreshStudyHabitSuggestionView(APIView):
 
                 suggestions.append({
                     "subject": habit.subject.name,
-                    "suggestion": ai_result
+                    "suggestion": result
                 })
+
+            # ------------------------------------------------
+            # STEP 4:
+            # Return response
+            # ------------------------------------------------
 
             return Response(
                 {
                     "student": request.user.username,
                     "suggestions": suggestions,
                     "message": (
-                        "AI study habits and "
-                        "recommendations generated successfully."
+                        "Study habits and recommendations "
+                        "generated successfully."
                     )
                 },
                 status=status.HTTP_200_OK
@@ -1202,12 +1259,13 @@ class RefreshStudyHabitSuggestionView(APIView):
 
             return Response(
                 {
-                    "error": "Unable to generate AI study recommendations.",
+                    "error": (
+                        "Unable to generate study recommendations."
+                    ),
                     "details": str(e)
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-        
+            )     
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
