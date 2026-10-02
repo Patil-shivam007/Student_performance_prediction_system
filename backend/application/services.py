@@ -1,52 +1,57 @@
 import json
-import requests
-
-from .models import PredictionHistory, Attendance
-
-
-import os
+from pathlib import Path
 
 from .models import (
     PredictionHistory,
     Attendance,
     StudyHabit,
-    StudentSubject,
-    Subject
+    Subject,
 )
 
-import os
-import json
-from pathlib import Path
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-# Append the key parameter to the URL endpoint
-GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 
-def generate_study_suggestions(study_habit):
+# ============================================================
+# HELPER FUNCTIONS
+# ============================================================
+
+def get_prediction_subject_name(prediction):
     """
-    Generate personalized study suggestions using:
-    StudyHabit + PredictionHistory + Attendance
+    Safely get the subject name from PredictionHistory.
+
+    Supports both:
+    - Subject object
+    - String subject
     """
 
-    student = study_habit.student
-    subject = study_habit.subject
+    subject = prediction.subject
 
-    # --------------------------------------------------
-    # 1. Get latest prediction history for this subject
-    # --------------------------------------------------
+    if hasattr(subject, "name"):
+        return subject.name
 
-    prediction = (
-        PredictionHistory.objects
-        .filter(
-            student=student,
-            subject__iexact=subject.name
-        )
-        .order_by("-created_at")
-        .first()
-    )
+    return str(subject)
 
-    # --------------------------------------------------
-    # 2. Get attendance records for this subject
-    # --------------------------------------------------
+
+def get_latest_prediction(student, subject_name):
+    """
+    Get the latest prediction for a student and subject.
+    """
+
+    predictions = PredictionHistory.objects.filter(
+        student=student
+    ).order_by("-created_at")
+
+    for prediction in predictions:
+        prediction_subject = get_prediction_subject_name(prediction)
+
+        if prediction_subject.lower() == subject_name.lower():
+            return prediction
+
+    return None
+
+
+def get_attendance_data(student, subject):
+    """
+    Calculate attendance information for a subject.
+    """
 
     attendance_records = Attendance.objects.filter(
         student=student,
@@ -75,195 +80,474 @@ def generate_study_suggestions(study_habit):
     else:
         attendance_percentage = None
 
-    # --------------------------------------------------
-    # 3. Prediction data
-    # --------------------------------------------------
+    return {
+        "total_classes": total_classes,
+        "present": present,
+        "absent": absent,
+        "late": late,
+        "attendance_percentage": attendance_percentage,
+    }
+
+
+# ============================================================
+# STUDY SUGGESTION GENERATOR
+# ============================================================
+
+def generate_study_suggestions(study_habit):
+    """
+    Generate personalized study suggestions without Gemini.
+
+    Uses:
+    - StudyHabit
+    - PredictionHistory
+    - Attendance
+    """
+
+    student = study_habit.student
+    subject = study_habit.subject
+
+    # --------------------------------------------------------
+    # 1. Get latest prediction
+    # --------------------------------------------------------
+
+    prediction = get_latest_prediction(
+        student,
+        subject.name
+    )
+
+    # --------------------------------------------------------
+    # 2. Get attendance
+    # --------------------------------------------------------
+
+    attendance = get_attendance_data(
+        student,
+        subject
+    )
+
+    total_classes = attendance["total_classes"]
+    present = attendance["present"]
+    absent = attendance["absent"]
+    late = attendance["late"]
+    attendance_percentage = attendance["attendance_percentage"]
+
+    # --------------------------------------------------------
+    # 3. Default academic values
+    # --------------------------------------------------------
+
+    predicted_marks = None
+    performance_category = None
+    assignment_completion = None
+    internal_marks = None
+    midterm_marks = None
+    previous_sgpa = None
 
     if prediction:
+
         predicted_marks = prediction.predicted_final_marks
         performance_category = prediction.performance_category
+
         assignment_completion = (
             prediction.assignment_completion_percentage
         )
+
         internal_marks = prediction.internal_marks
         midterm_marks = prediction.midterm_marks
         previous_sgpa = prediction.previous_semester_sgpa
-    else:
-        predicted_marks = None
-        performance_category = None
-        assignment_completion = None
-        internal_marks = None
-        midterm_marks = None
-        previous_sgpa = None
 
-    # --------------------------------------------------
-    # 4. Build prompt
-    # --------------------------------------------------
+    # --------------------------------------------------------
+    # 4. Create analysis
+    # --------------------------------------------------------
 
-    prompt = f"""
-You are an AI study advisor for a college student.
+    strengths = []
+    weaknesses = []
+    subject_suggestions = []
+    concentration_tips = []
 
-Analyze the student's study habits, attendance,
-academic performance, and prediction data.
+    # ========================================================
+    # ATTENDANCE ANALYSIS
+    # ========================================================
 
-Create personalized and practical study recommendations.
+    if attendance_percentage is not None:
 
-STUDENT INFORMATION
--------------------
+        if attendance_percentage >= 85:
+            strengths.append(
+                f"Good attendance with {attendance_percentage}% attendance."
+            )
 
-Subject: {subject.name}
+        elif attendance_percentage >= 75:
+            strengths.append(
+                f"Attendance is acceptable at {attendance_percentage}%."
+            )
 
-STUDY HABITS
-Study hours per day: {study_habit.study_hours_per_day}
-Preferred study time: {study_habit.preferred_study_time}
-Study method: {study_habit.study_method}
-Distractions: {study_habit.distractions}
-Sleep hours: {study_habit.sleep_hours}
-Notes: {study_habit.notes}
+        else:
+            weaknesses.append(
+                f"Attendance is low at {attendance_percentage}%."
+            )
 
-ATTENDANCE
-Total classes: {total_classes}
-Present: {present}
-Absent: {absent}
-Late: {late}
-Attendance percentage: {attendance_percentage}
+            subject_suggestions.append(
+                "Attend classes regularly to avoid missing important concepts."
+            )
 
-ACADEMIC PERFORMANCE
-Predicted final marks: {predicted_marks}
-Performance category: {performance_category}
-Assignment completion: {assignment_completion}
-Internal marks: {internal_marks}
-Midterm marks: {midterm_marks}
-Previous semester SGPA: {previous_sgpa}
+            if attendance_percentage < 60:
+                subject_suggestions.append(
+                    "Give immediate priority to improving class attendance."
+                )
 
-Based on all this information, identify the student's
-strengths, weaknesses, and areas that need improvement.
+    # ========================================================
+    # STUDY HOURS ANALYSIS
+    # ========================================================
 
-Return ONLY valid JSON.
+    study_hours = study_habit.study_hours_per_day
 
-Use exactly this structure:
+    if study_hours is not None:
 
-{{
-    "overall_analysis": "Short analysis of the student's current situation",
+        if study_hours >= 3:
+            strengths.append(
+                f"Good study commitment of {study_hours} hours per day."
+            )
 
-    "strengths": [
-        "strength 1",
-        "strength 2"
-    ],
+        elif study_hours >= 2:
+            strengths.append(
+                f"Maintaining around {study_hours} hours of daily study."
+            )
 
-    "weaknesses": [
-        "weakness 1",
-        "weakness 2"
-    ],
+        else:
+            weaknesses.append(
+                "Daily study time is relatively low."
+            )
 
-    "daily_plan": [
-        {{
-            "time": "6:00 PM - 7:00 PM",
-            "activity": "Python practice"
-        }},
-        {{
-            "time": "7:15 PM - 8:00 PM",
-            "activity": "Revision"
-        }}
-    ],
+            subject_suggestions.append(
+                "Try to gradually increase focused study time."
+            )
 
-    "subject_suggestions": [
-        "subject specific suggestion 1",
-        "subject specific suggestion 2"
-    ],
+    # ========================================================
+    # PREDICTED MARKS ANALYSIS
+    # ========================================================
 
-    "concentration_tips": [
-        "tip 1",
-        "tip 2"
-    ],
+    if predicted_marks is not None:
 
-    "focus_level": "High"
-}}
+        try:
+            marks = float(predicted_marks)
+        except (TypeError, ValueError):
+            marks = None
 
-Rules:
-- Keep suggestions practical.
-- Consider attendance and academic performance.
-- Consider the student's study habits.
-- Give subject-specific recommendations.
-- Do not give medical advice.
-- Do not include Markdown.
-- Return JSON only.
-"""
-    
-    # --------------------------------------------------
-    # 5. Send request to Gemini
-    # --------------------------------------------------
+        if marks is not None:
 
-    payload = {
-        "contents": [
-            {
-                "parts": [
-                    {
-                        "text": prompt
-                    }
-                ]
-            }
-        ],
-        "generationConfig": {
-            "responseMimeType": "application/json"
-        }
-    }
+            if marks >= 80:
+                strengths.append(
+                    f"Predicted performance is strong at {marks} marks."
+                )
 
-    headers = {
-        "Content-Type": "application/json",
-        "x-goog-api-key": GEMINI_API_KEY
-    }
+                subject_suggestions.append(
+                    "Continue regular practice and focus on advanced problems."
+                )
+
+            elif marks >= 60:
+                strengths.append(
+                    f"Predicted performance is moderate at {marks} marks."
+                )
+
+                subject_suggestions.append(
+                    "Focus on revision and solving more practice questions."
+                )
+
+            else:
+                weaknesses.append(
+                    f"Predicted marks are relatively low at {marks}."
+                )
+
+                subject_suggestions.append(
+                    "Increase subject practice and revise important concepts regularly."
+                )
+
+    # ========================================================
+    # PERFORMANCE CATEGORY
+    # ========================================================
+
+    if performance_category:
+
+        category = str(performance_category).lower()
+
+        if any(
+            word in category
+            for word in ["excellent", "high", "good"]
+        ):
+            strengths.append(
+                f"Performance category: {performance_category}."
+            )
+
+        elif any(
+            word in category
+            for word in ["poor", "low", "weak", "at risk"]
+        ):
+            weaknesses.append(
+                f"Performance category indicates improvement is needed: "
+                f"{performance_category}."
+            )
+
+    # ========================================================
+    # ASSIGNMENT ANALYSIS
+    # ========================================================
+
+    if assignment_completion is not None:
+
+        try:
+            completion = float(assignment_completion)
+        except (TypeError, ValueError):
+            completion = None
+
+        if completion is not None:
+
+            if completion >= 90:
+                strengths.append(
+                    f"Strong assignment completion at {completion}%."
+                )
+
+            elif completion >= 70:
+                subject_suggestions.append(
+                    "Keep assignment completion consistent."
+                )
+
+            else:
+                weaknesses.append(
+                    f"Assignment completion is low at {completion}%."
+                )
+
+                subject_suggestions.append(
+                    "Complete pending assignments before starting new topics."
+                )
+
+    # ========================================================
+    # INTERNAL MARKS
+    # ========================================================
+
+    if internal_marks is not None:
+
+        try:
+            internal = float(internal_marks)
+        except (TypeError, ValueError):
+            internal = None
+
+        if internal is not None:
+
+            if internal >= 75:
+                strengths.append(
+                    "Internal assessment performance is strong."
+                )
+
+            elif internal < 50:
+                weaknesses.append(
+                    "Internal assessment marks need improvement."
+                )
+
+                subject_suggestions.append(
+                    "Revise internal assessment topics and practice previous questions."
+                )
+
+    # ========================================================
+    # MIDTERM MARKS
+    # ========================================================
+
+    if midterm_marks is not None:
+
+        try:
+            midterm = float(midterm_marks)
+        except (TypeError, ValueError):
+            midterm = None
+
+        if midterm is not None:
+
+            if midterm >= 75:
+                strengths.append(
+                    "Midterm performance is strong."
+                )
+
+            elif midterm < 50:
+                weaknesses.append(
+                    "Midterm performance needs improvement."
+                )
+
+                subject_suggestions.append(
+                    "Review mistakes from the midterm and practice weak topics."
+                )
+
+    # ========================================================
+    # STUDY METHOD
+    # ========================================================
+
+    if study_habit.study_method:
+
+        subject_suggestions.append(
+            f"Continue using your study method: "
+            f"{study_habit.study_method}."
+        )
+
+    # ========================================================
+    # DISTRACTIONS
+    # ========================================================
+
+    if study_habit.distractions:
+
+        concentration_tips.append(
+            f"Reduce distractions such as {study_habit.distractions}."
+        )
+
+    concentration_tips.extend([
+        "Keep your phone away during focused study sessions.",
+        "Study in focused sessions with short breaks.",
+        "Review important concepts before starting new topics.",
+    ])
+
+    # ========================================================
+    # SLEEP
+    # ========================================================
+
+    sleep_hours = study_habit.sleep_hours
+
+    if sleep_hours is not None:
+
+        try:
+            sleep = float(sleep_hours)
+        except (TypeError, ValueError):
+            sleep = None
+
+        if sleep is not None and sleep < 6:
+            concentration_tips.append(
+                "Maintain a consistent study schedule and avoid studying very late at night."
+            )
+
+    # ========================================================
+    # DAILY PLAN
+    # ========================================================
 
     try:
-        response = requests.post(
-            GEMINI_URL,
-            headers=headers,
-            json=payload,
-            timeout=120
+        daily_hours = float(study_hours or 1)
+    except (TypeError, ValueError):
+        daily_hours = 1
+
+    if daily_hours < 1:
+        daily_hours = 1
+
+    if daily_hours >= 3:
+        first_session = "1 hour"
+        second_session = "1 hour"
+        third_session = "1 hour"
+    elif daily_hours >= 2:
+        first_session = "1 hour"
+        second_session = "1 hour"
+        third_session = None
+    else:
+        first_session = "45 minutes"
+        second_session = "30 minutes"
+        third_session = None
+
+    daily_plan = [
+        {
+            "time": "First Study Session",
+            "activity": (
+                f"{first_session} focused study of {subject.name}"
+            ),
+        },
+        {
+            "time": "Second Study Session",
+            "activity": (
+                f"{second_session} revision and practice"
+            ),
+        },
+    ]
+
+    if third_session:
+        daily_plan.append({
+            "time": "Third Study Session",
+            "activity": (
+                f"{third_session} problem solving or assignment work"
+            ),
+        })
+
+    # ========================================================
+    # FOCUS LEVEL
+    # ========================================================
+
+    focus_level = "Medium"
+
+    if (
+        attendance_percentage is not None
+        and attendance_percentage < 60
+    ):
+        focus_level = "High"
+
+    if (
+        predicted_marks is not None
+        and assignment_completion is not None
+    ):
+        try:
+            marks_value = float(predicted_marks)
+            assignment_value = float(assignment_completion)
+
+            if marks_value < 50 or assignment_value < 50:
+                focus_level = "High"
+
+        except (TypeError, ValueError):
+            pass
+
+    # ========================================================
+    # OVERALL ANALYSIS
+    # ========================================================
+
+    if not strengths:
+        strengths.append(
+            "The student has started tracking study habits."
         )
 
-        response.raise_for_status()
-
-        data = response.json()
-
-        ai_response = (
-            data["candidates"][0]["content"]["parts"][0]["text"]
-            .strip()
+    if not weaknesses:
+        weaknesses.append(
+            "Continue monitoring academic performance for areas that need improvement."
         )
 
-        # --------------------------------------------------
-        # 6. Convert JSON string to Python dictionary
-        # --------------------------------------------------
+    if not subject_suggestions:
+        subject_suggestions.append(
+            f"Continue regular study and practice for {subject.name}."
+        )
 
-        return json.loads(ai_response)
+    overall_analysis = (
+        f"For {subject.name}, the current focus level is {focus_level}. "
+        f"The recommendation is based on the student's study habits, "
+        f"attendance, and available academic performance data."
+    )
 
-    except requests.exceptions.ConnectionError:
-        return {
-            "error": "Unable to connect to Gemini API."
-        }
+    # ========================================================
+    # RETURN SAME JSON STRUCTURE
+    # ========================================================
 
-    except requests.exceptions.Timeout:
-        return {
-            "error": "The AI model took too long to respond."
-        }
+    return {
+        "overall_analysis": overall_analysis,
 
-    except json.JSONDecodeError:
-        return {
-            "error": "The AI returned an invalid JSON response.",
-            "raw_response": ai_response
-        }
+        "strengths": strengths[:5],
 
-    except requests.exceptions.RequestException as e:
-        return {
-            "error": f"Unable to generate study suggestions: {str(e)}"
-        }
+        "weaknesses": weaknesses[:5],
+
+        "daily_plan": daily_plan,
+
+        "subject_suggestions": subject_suggestions[:6],
+
+        "concentration_tips": concentration_tips[:5],
+
+        "focus_level": focus_level,
+    }
+
+
+# ============================================================
+# INITIAL STUDY HABITS
+# ============================================================
+
 def generate_initial_study_habits(student):
     """
-    Use Gemini to automatically create personalized
-    study habits based on the student's prediction history.
+    Automatically create initial study habits using
+    the student's prediction history.
+
+    No external AI API is required.
     """
 
-    # Get student's prediction history
     predictions = (
         PredictionHistory.objects
         .filter(student=student)
@@ -275,19 +559,22 @@ def generate_initial_study_habits(student):
             "No prediction data found. Please make a prediction first."
         )
 
-    # Get subjects directly from prediction history
+    # --------------------------------------------------------
+    # Get unique subjects
+    # --------------------------------------------------------
+
     subject_names = []
 
     for prediction in predictions:
-        subject = prediction.subject
 
-        # Support both a Subject object and a string subject field
-        if hasattr(subject, "name"):
-            subject_name = subject.name
-        else:
-            subject_name = str(subject)
+        subject_name = get_prediction_subject_name(
+            prediction
+        )
 
-        if subject_name and subject_name not in subject_names:
+        if (
+            subject_name
+            and subject_name not in subject_names
+        ):
             subject_names.append(subject_name)
 
     if not subject_names:
@@ -295,158 +582,14 @@ def generate_initial_study_habits(student):
             "No subjects found in prediction history."
         )
 
-    # Prepare academic information
-    academic_data = []
-
-    for prediction in predictions:
-        subject = prediction.subject
-
-        if hasattr(subject, "name"):
-            subject_name = subject.name
-        else:
-            subject_name = str(subject)
-
-        academic_data.append({
-            "subject": subject_name,
-            "predicted_final_marks": prediction.predicted_final_marks,
-            "performance_category": prediction.performance_category,
-            "attendance_percentage": prediction.attendance_percentage,
-            "study_hours_per_day": prediction.study_hours_per_day,
-            "assignment_completion_percentage": (
-                prediction.assignment_completion_percentage
-            ),
-            "internal_marks": prediction.internal_marks,
-            "midterm_marks": prediction.midterm_marks,
-            "previous_semester_sgpa": (
-                prediction.previous_semester_sgpa
-            ),
-        })
-
-    prompt = f"""
-You are an AI study planner for a college student.
-
-Create personalized study habits for this student.
-
-STUDENT:
-{student.username}
-
-SUBJECTS:
-{json.dumps(subject_names)}
-
-ACADEMIC PERFORMANCE:
-{json.dumps(academic_data, default=str)}
-
-For every subject, create a practical study habit.
-
-The study habit must contain:
-
-- subject
-- study_hours_per_day
-- preferred_study_time
-- study_method
-- distractions
-- sleep_hours
-- notes
-
-Consider:
-- predicted marks
-- performance category
-- attendance
-- current study hours
-- assignment completion
-- internal marks
-- midterm marks
-- previous semester SGPA
-
-Give more study time to subjects where the student
-needs more improvement.
-
-Do not give medical advice.
-
-Return ONLY valid JSON.
-
-Use exactly this format:
-
-{{
-    "study_habits": [
-        {{
-            "subject": "Python Programming",
-            "study_hours_per_day": 2.0,
-            "preferred_study_time": "6:00 PM - 8:00 PM",
-            "study_method": "Practice coding and solve problems",
-            "distractions": "Mobile phone and social media",
-            "sleep_hours": 7.0,
-            "notes": "Focus on Python fundamentals and practical coding."
-        }}
-    ]
-}}
-"""
-
-    payload = {
-        "contents": [
-            {
-                "parts": [
-                    {
-                        "text": prompt
-                    }
-                ]
-            }
-        ],
-        "generationConfig": {
-            "responseMimeType": "application/json"
-        }
-    }
-
-    headers = {
-        "Content-Type": "application/json",
-        "x-goog-api-key": GEMINI_API_KEY
-    }
-
-    try:
-        response = requests.post(
-            GEMINI_URL,
-            headers=headers,
-            json=payload,
-            timeout=120
-        )
-
-        response.raise_for_status()
-
-        data = response.json()
-
-        ai_response = (
-            data["candidates"][0]["content"]["parts"][0]["text"]
-            .strip()
-        )
-
-        result = json.loads(ai_response)
-
-    except requests.exceptions.Timeout:
-        raise ValueError(
-            "Gemini request timed out."
-        )
-
-    except requests.exceptions.RequestException as e:
-        raise ValueError(
-            f"Gemini request failed: {str(e)}"
-        )
-
-    except (KeyError, IndexError, json.JSONDecodeError):
-        raise ValueError(
-            "Gemini returned an invalid response."
-        )
-
-    # Save generated habits
     created_habits = []
 
-    for habit_data in result.get("study_habits", []):
+    # --------------------------------------------------------
+    # Create habit for every subject
+    # --------------------------------------------------------
 
-        subject_name = habit_data.get("subject")
+    for subject_name in subject_names:
 
-        if not subject_name:
-            continue
-
-        # Find the Django Subject using the name
         subject = Subject.objects.filter(
             name__iexact=subject_name
         ).first()
@@ -454,35 +597,176 @@ Use exactly this format:
         if not subject:
             continue
 
+        # ----------------------------------------------------
+        # Latest prediction for subject
+        # ----------------------------------------------------
+
+        prediction = get_latest_prediction(
+            student,
+            subject_name
+        )
+
+        # ----------------------------------------------------
+        # Default values
+        # ----------------------------------------------------
+
+        study_hours = 1.5
+
+        preferred_time = "6:00 PM - 7:30 PM"
+
+        study_method = (
+            "Review concepts, practice questions, "
+            "and solve subject-related problems."
+        )
+
+        distractions = (
+            "Mobile phone and social media"
+        )
+
+        sleep_hours = 7.0
+
+        notes = (
+            f"Maintain regular study practice for {subject_name}."
+        )
+
+        # ----------------------------------------------------
+        # Adjust based on prediction
+        # ----------------------------------------------------
+
+        if prediction:
+
+            predicted_marks = prediction.predicted_final_marks
+            performance_category = (
+                prediction.performance_category
+            )
+
+            assignment_completion = (
+                prediction.assignment_completion_percentage
+            )
+
+            try:
+                marks = float(predicted_marks)
+            except (TypeError, ValueError):
+                marks = None
+
+            try:
+                assignments = float(
+                    assignment_completion
+                )
+            except (TypeError, ValueError):
+                assignments = None
+
+            category = str(
+                performance_category or ""
+            ).lower()
+
+            # -----------------------------------------------
+            # High improvement requirement
+            # -----------------------------------------------
+
+            needs_improvement = False
+
+            if marks is not None and marks < 60:
+                needs_improvement = True
+
+            if assignments is not None and assignments < 70:
+                needs_improvement = True
+
+            if any(
+                word in category
+                for word in [
+                    "poor",
+                    "low",
+                    "weak",
+                    "at risk"
+                ]
+            ):
+                needs_improvement = True
+
+            if needs_improvement:
+
+                study_hours = 2.5
+
+                preferred_time = "6:00 PM - 8:30 PM"
+
+                study_method = (
+                    "Focus on weak concepts, revise theory, "
+                    "solve practice questions, and review mistakes."
+                )
+
+                notes = (
+                    f"Give additional study time to {subject_name} "
+                    "because the available academic data indicates "
+                    "that improvement may be needed."
+                )
+
+            # -----------------------------------------------
+            # Good performance
+            # -----------------------------------------------
+
+            elif marks is not None and marks >= 80:
+
+                study_hours = 1.5
+
+                study_method = (
+                    "Practice advanced questions, revise concepts, "
+                    "and maintain consistent performance."
+                )
+
+                notes = (
+                    f"Maintain your current performance in "
+                    f"{subject_name} and continue regular practice."
+                )
+
+            # -----------------------------------------------
+            # Average performance
+            # -----------------------------------------------
+
+            else:
+
+                study_hours = 2.0
+
+                study_method = (
+                    "Revise important concepts and solve "
+                    "regular practice questions."
+                )
+
+                notes = (
+                    f"Focus on consistent improvement in "
+                    f"{subject_name}."
+                )
+
+        # ----------------------------------------------------
+        # Save habit
+        # ----------------------------------------------------
+
         habit, created = StudyHabit.objects.update_or_create(
             student=student,
             subject=subject,
+
             defaults={
-                "study_hours_per_day": habit_data.get(
-                    "study_hours_per_day",
-                    1.0
-                ),
-                "preferred_study_time": habit_data.get(
-                    "preferred_study_time"
-                ),
-                "study_method": habit_data.get(
-                    "study_method"
-                ),
-                "distractions": habit_data.get(
-                    "distractions"
-                ),
-                "sleep_hours": habit_data.get(
-                    "sleep_hours"
-                ),
-                "notes": habit_data.get(
-                    "notes"
-                ),
+                "study_hours_per_day": study_hours,
+
+                "preferred_study_time": preferred_time,
+
+                "study_method": study_method,
+
+                "distractions": distractions,
+
+                "sleep_hours": sleep_hours,
+
+                "notes": notes,
             }
         )
 
         created_habits.append(habit)
 
     return created_habits
+
+
+# ============================================================
+# JSON STUDY HABITS
+# ============================================================
 
 def get_json_study_habits(student):
     """
@@ -496,21 +780,40 @@ def get_json_study_habits(student):
     )
 
     if not json_file.exists():
-        raise ValueError("Study habits JSON file not found.")
+        raise ValueError(
+            "Study habits JSON file not found."
+        )
 
     try:
-        with open(json_file, "r", encoding="utf-8") as file:
+
+        with open(
+            json_file,
+            "r",
+            encoding="utf-8"
+        ) as file:
+
             data = json.load(file)
+
     except json.JSONDecodeError:
-        raise ValueError("Study habits JSON file contains invalid JSON.")
+
+        raise ValueError(
+            "Study habits JSON file contains invalid JSON."
+        )
 
     username = student.username
 
-    student_data = data.get("students", {}).get(username)
+    student_data = (
+        data.get("students", {})
+        .get(username)
+    )
 
     if not student_data:
+
         raise ValueError(
             f"No study habits found for student '{username}'."
         )
 
-    return student_data.get("study_habits", [])
+    return student_data.get(
+        "study_habits",
+        []
+    )
